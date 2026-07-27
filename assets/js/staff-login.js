@@ -11,6 +11,14 @@ const b=$('bootstrapBtn');if(b)b.addEventListener('click',async()=>{
  const r=await UI.fire({title:'ตั้งค่า Admin ครั้งแรก / กู้คืน',html:'<input id="sw-token" class="swal2-input" type="password" placeholder="Bootstrap Token"><input id="sw-name" class="swal2-input" placeholder="ชื่อ Admin"><input id="sw-user" class="swal2-input" placeholder="Username"><input id="sw-code" class="swal2-input" placeholder="รหัสพนักงาน (ถ้ามี)"><input id="sw-pass" class="swal2-input" type="password" placeholder="รหัสผ่านใหม่อย่างน้อย 10 ตัว">',showCancelButton:true,confirmButtonText:'สร้าง/กู้คืน Admin',cancelButtonText:'ยกเลิก',preConfirm:()=>({token:document.getElementById('sw-token').value,displayName:document.getElementById('sw-name').value,username:document.getElementById('sw-user').value,employeeCode:document.getElementById('sw-code').value,password:document.getElementById('sw-pass').value})});
  if(!r.isConfirmed)return;
  try{UI.loading('กำลังตั้งค่าบัญชี Admin...');const x=await Api.request('/api/bootstrap/admin',{method:'POST',headers:{'X-Admin-Bootstrap-Token':r.value.token},body:JSON.stringify(r.value)});UI.close();UI.success('ดำเนินการสำเร็จ',x.message)}
- catch(e){UI.close();UI.error('ดำเนินการไม่สำเร็จ',e.message)}
+ catch(e){
+  UI.close();
+  const message=String(e.message||'');
+  if(message.includes('PBKDF2')||message.includes('PASSWORD_HASH')){
+   UI.error('ระบบเข้ารหัสรหัสผ่านไม่สำเร็จ','กรุณาตรวจสอบว่า Cloudflare Worker เป็นเวอร์ชัน ROUND 03 REVISION 04 แล้ว');
+  }else{
+   UI.error('ดำเนินการไม่สำเร็จ',message||'ไม่สามารถตั้งค่า Admin ได้');
+  }
+ }
 });
 })();
