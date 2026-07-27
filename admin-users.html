@@ -25,7 +25,7 @@ dialog::backdrop{background:#0f172a88}.dialog-body{padding:18px}.dialog-head{dis
 <h2>จัดการผู้ใช้งาน</h2>
 <p class="muted">เพิ่ม แก้ไข เปิด–ปิดบัญชี และสร้าง QR รายบุคคล โดยไม่ต้องแก้ D1 ด้วยตนเอง</p>
 <div class="toolbar">
-<label>Admin Bootstrap Token<input id="adminTokenUsers" class="input" type="password" autocomplete="off"></label>
+
 <label>ค้นหา<input id="userSearch" class="input" placeholder="ชื่อ รหัสพนักงาน หรือ username"></label>
 <label>สิทธิ์<select id="roleFilter" class="input"><option value="">ทั้งหมด</option><option value="FIELD_USER">ผู้ปฏิบัติงาน</option><option value="REVIEWER">หัวหน้างาน</option><option value="ADMIN">Admin</option><option value="FINANCE">การเงิน</option><option value="EXECUTIVE">ผู้บริหาร</option></select></label>
 <label>สถานะ<select id="statusFilter" class="input"><option value="ALL">ทั้งหมด</option><option value="ACTIVE">เปิดใช้งาน</option><option value="INACTIVE">ปิดใช้งาน</option></select></label>
@@ -41,11 +41,11 @@ dialog::backdrop{background:#0f172a88}.dialog-body{padding:18px}.dialog-head{dis
 <label>ชื่อผู้ใช้งาน<input id="editDisplayName" class="input"></label>
 <label>Username (อังกฤษ/ตัวเลข)<input id="editUsername" class="input"></label>
 <label>รหัสพนักงาน<input id="editEmployeeCode" class="input"></label>
-<label>สิทธิ์<select id="editRoleCode" class="input"><option value="FIELD_USER">ผู้ปฏิบัติงาน</option><option value="REVIEWER">หัวหน้างาน</option><option value="ADMIN">Admin</option><option value="FINANCE">การเงิน</option><option value="EXECUTIVE">ผู้บริหาร</option></select></label>
+<label>รหัสผ่าน (จำเป็นสำหรับ Admin/หัวหน้างาน และเว้นว่างได้เมื่อไม่เปลี่ยน)<input id="editPassword" class="input" type="password" autocomplete="new-password"></label><label>สิทธิ์<select id="editRoleCode" class="input"><option value="FIELD_USER">ผู้ปฏิบัติงาน</option><option value="REVIEWER">หัวหน้างาน</option><option value="ADMIN">Admin</option><option value="FINANCE">การเงิน</option><option value="EXECUTIVE">ผู้บริหาร</option></select></label>
 <button id="saveUserBtn" class="btn btn-primary">บันทึก</button>
 </div></div></dialog>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
-<script src="assets/js/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="assets/js/config.js"></script><script src="assets/js/ui-alerts.js"></script>
 <script src="assets/js/api.js"></script>
 <script src="assets/js/admin-users.js"></script>
 </body></html>
