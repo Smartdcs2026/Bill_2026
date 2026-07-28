@@ -274,3 +274,149 @@ dialog::backdrop{background:#0c172b99;backdrop-filter:blur(2px)}
  .section-body,.section-head{padding:12px}
  .file-drop{align-items:stretch;flex-direction:column}
 }
+
+
+/* =====================================================================
+   ROUND 04 REVISION 08 — ADMIN COMPACT BALANCE
+   ===================================================================== */
+body{font-size:13px}
+.admin-top{height:58px;padding:0 14px}
+.brand-symbol{width:31px;height:31px;border-radius:8px;font-size:11px}
+.brand-copy b{font-size:16px}
+.brand-copy small{font-size:8px;margin-top:3px}
+.admin-account{padding:5px 9px;font-size:11px}
+.admin-layout{grid-template-columns:208px minmax(0,1fr);min-height:calc(100vh - 58px)}
+.side{top:58px;height:calc(100vh - 58px);padding:10px 8px}
+.nav-section{padding:8px 10px 5px;font-size:9px}
+.nav-section-bottom{margin-top:12px}
+.side a{gap:8px;padding:7px 8px;border-radius:8px;margin-bottom:2px;font-size:12px}
+.nav-icon{width:23px;height:23px;border-radius:6px;font-size:9px}
+
+.content{padding:16px 18px 24px}
+.page-head{align-items:center;margin-bottom:11px;gap:12px}
+.eyebrow{font-size:9px;margin-bottom:3px}
+.page-head h1{font-size:23px}
+.page-head p{font-size:11px;margin-top:3px}
+.page-actions{gap:6px}
+.back-link{min-height:36px;padding:6px 10px;border-radius:8px;font-size:11px}
+.btn{min-height:36px;padding:6px 11px;border-radius:8px;font-size:11px}
+.create-btn{min-width:130px}
+
+.metric-grid{gap:8px;margin-bottom:9px}
+.metric{border-radius:11px;padding:9px 11px;gap:8px;min-height:61px}
+.metric-icon{width:32px;height:32px;border-radius:9px;font-size:10px}
+.metric span{font-size:9px}
+.metric b{font-size:20px;margin-top:2px}
+
+.panel,.admin-section{border-radius:12px}
+.panel-toolbar{padding:9px 10px;gap:9px;border-radius:12px 12px 0 0}
+.toolbar-title{min-width:130px}
+.toolbar-title b{font-size:12px}
+.toolbar-title span{font-size:9px}
+.filters{grid-template-columns:minmax(220px,1.45fr) minmax(120px,.58fr) minmax(120px,.58fr) auto;gap:6px}
+.search-box{height:35px;border-radius:8px;padding-left:8px}
+.search-box input{height:32px;font-size:11px}
+.search-icon{font-size:15px}
+.filter-field{font-size:8px}
+.filter-field span{margin-bottom:3px}
+.filter-field select{height:35px;border-radius:8px;padding:5px 7px;font-size:11px}
+.refresh-btn{height:35px}
+
+.table-wrap{max-height:calc(100vh - 280px);min-height:220px;border-radius:0 0 12px 12px}
+.users-table{min-width:930px}
+.users-table th,.users-table td{padding:7px 10px}
+.users-table th{font-size:8px}
+.col-user{min-width:190px}
+.col-action{width:62px}
+.user-cell{gap:7px}
+.avatar{width:32px;height:32px;border-radius:9px;font-size:10px}
+.user-copy b{font-size:11px}
+.user-copy small{font-size:9px;margin-top:1px}
+.code-cell{font-size:11px}
+.badge{padding:3px 6px;font-size:8px}
+.qr-cell b{font-size:10px}
+.qr-cell small{font-size:8px;margin-top:2px}
+.last-use{font-size:9px}
+.more-btn{width:33px;height:30px;border-radius:7px;font-size:16px}
+
+.admin-page-grid{gap:9px}
+.section-head{padding:11px 13px;gap:9px}
+.section-head h2{font-size:15px}
+.section-head p{font-size:10px;margin-top:2px}
+.section-number{width:27px;height:27px;border-radius:8px;font-size:11px}
+.section-title-wrap{gap:8px}
+.section-body{padding:12px 13px}
+.admin-form-grid{gap:7px}
+.admin-form-grid label{font-size:9px}
+.admin-form-grid small{font-size:8px;margin-top:2px}
+.admin-form-grid input,.admin-form-grid select{height:36px;border-radius:8px;padding:6px 8px;margin-top:3px;font-size:11px}
+.form-actions{gap:6px;margin-top:9px}
+.inline-status{margin-top:8px;border-radius:8px;padding:8px 10px;font-size:10px}
+.file-drop{gap:8px;border-radius:9px;padding:9px;margin-bottom:8px}
+.preview-summary{gap:5px;margin-bottom:7px}
+.preview-summary .pill,.pill{padding:4px 7px;font-size:9px}
+.data-table-wrap{max-height:58vh;border-radius:9px}
+.data-table{min-width:790px}
+.data-table th,.data-table td{padding:6px 8px;font-size:10px}
+.data-table th{font-size:8px}
+
+.setting-row{gap:10px;padding:9px 0}
+.setting-row b{font-size:11px}
+.setting-row small{font-size:9px;margin-top:1px}
+.switch{width:39px;height:21px}
+.switch span:before{width:15px;height:15px}
+.switch input:checked+span:before{transform:translateX(18px)}
+
+.dashboard-grid{gap:9px}
+.dashboard-card{border-radius:12px;padding:12px}
+.dashboard-card .card-icon{width:33px;height:33px;border-radius:9px;margin-bottom:8px;font-size:10px}
+.dashboard-card b{font-size:13px}
+.dashboard-card p{font-size:9px;margin-top:3px;line-height:1.4}
+
+dialog{border-radius:14px;width:min(550px,calc(100% - 20px))}
+.dialog-card{padding:15px}
+.dialog-head{padding-bottom:9px}
+.dialog-head h3{font-size:18px}
+.icon-btn{width:34px;height:34px;border-radius:8px;font-size:19px}
+.form-grid{gap:8px;margin-top:11px}
+.form-grid label{font-size:9px}
+.form-grid small{font-size:8px}
+.form-grid input,.form-grid select{height:37px;border-radius:8px;padding:6px 8px;margin-top:3px;font-size:11px}
+.dialog-actions{gap:6px;margin-top:11px;padding-top:10px}
+
+@media(max-width:1080px){
+ .content{padding:13px}
+ .filters{grid-template-columns:minmax(190px,1fr) 135px 135px auto}
+}
+@media(max-width:850px){
+ .content{padding:9px}
+ .metric-grid{gap:5px}
+ .metric{min-height:57px;padding:8px}
+ .mobile-user-list{gap:6px;padding:7px}
+ .mobile-user-card{border-radius:10px;padding:8px}
+ .mobile-user-head{grid-template-columns:32px minmax(0,1fr) auto;gap:7px}
+ .mobile-user-meta{gap:4px;margin-top:7px}
+ .mobile-meta{border-radius:7px;padding:5px}
+ .mobile-meta span{font-size:7px}
+ .mobile-meta b{font-size:9px}
+}
+@media(max-width:560px){
+ .admin-top{height:54px;padding:0 9px}
+ .admin-layout{min-height:calc(100vh - 54px)}
+ .side{top:54px}
+ .content{padding:7px}
+ .page-head{margin-bottom:8px}
+ .page-head h1{font-size:19px}
+ .page-head p{font-size:9px}
+ .metric{min-height:54px;padding:7px}
+ .metric-icon{width:28px;height:28px}
+ .metric b{font-size:17px}
+ .panel-toolbar{padding:7px}
+ .section-head{padding:9px 10px}
+ .section-body{padding:9px 10px}
+ .setting-row{padding:8px 0}
+ .dashboard-grid{grid-template-columns:1fr 1fr;gap:6px}
+ .dashboard-card{padding:9px}
+ .dashboard-card b{font-size:11px}
+ .dashboard-card p{font-size:8px}
+}
