@@ -78,3 +78,4 @@ main{max-width:1280px;padding:10px 12px 24px}
 .sync-center-actions .secondary{background:#fff;border:1px solid #d6dde7;color:#263548}
 .sync-center-summary{grid-template-columns:repeat(3,minmax(0,1fr))}
 @media(max-width:520px){.sync-center-actions{grid-template-columns:1fr}.sync-center-actions #retryFailedBtn{grid-column:auto}.sync-center-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.sync-center-actions #restoreLocalBtn{background:#fff;border:1px solid #d6dde7;color:#263548}
