@@ -38,5 +38,21 @@
  const getMeta=key=>request('meta','readonly',s=>s.get(key)).then(v=>v?.value??null);
  async function storageStatus(){const e=await navigator.storage?.estimate?.();return{usage:e?.usage||0,quota:e?.quota||0,persisted:await navigator.storage?.persisted?.()||false}}
  const requestPersistence=()=>navigator.storage?.persist?.()||false;
- window.LocalDraftDB={getDraft,saveDraft,deleteDraft,listDrafts,saveImage,getImage,updateImage,listImages,listPendingImages,deleteImage,saveAssignments,getAssignments,saveLocation,getLocation,updateLocation,listLocations,enqueue,getQueue,updateQueue,listQueue,listFailedQueue,resetFailedQueue,removeQueue,setMeta,getMeta,storageStatus,requestPersistence};
+ const allFrom=store=>request(store,'readonly',s=>s.getAll()).then(v=>v||[]);
+ async function exportSnapshot(userKey='field'){
+  const [drafts,images,assignments,locations,queue,meta]=await Promise.all(['drafts','images','assignments','locations','queue','meta'].map(allFrom));
+  return {format:'RetailInsightLocalBackup',version:1,exportedAt:now(),userKey,data:{drafts,images:images.map(x=>({...x,blob:null,blobMeta:x.blob?{type:x.blob.type||'',size:x.blob.size||0}:null})),assignments,locations,queue,meta}};
+ }
+ function queueSignature(q){const p=q?.payload||{};return [q?.type||'',q?.assignmentId||'',p.imageId||p.locationId||p.clientSubmissionId||p.id||q?.referenceId||''].join('::')}
+ async function repairQueue(){
+  const rows=await listQueue(),active=rows.filter(x=>x.state!=='DONE'),seen=new Map();let removedDuplicates=0,removedDone=0;
+  for(const row of active.sort((a,b)=>String(b.updatedAt||b.createdAt||'').localeCompare(String(a.updatedAt||a.createdAt||'')))){
+   const sig=queueSignature(row);if(!sig.endsWith('::')&&seen.has(sig)){await removeQueue(row.id);removedDuplicates++}else seen.set(sig,row.id);
+  }
+  const cutoff=Date.now()-7*864e5;
+  for(const row of rows.filter(x=>x.state==='DONE')){const t=new Date(row.updatedAt||row.createdAt||0).getTime();if(t&&t<cutoff){await removeQueue(row.id);removedDone++}}
+  return {removedDuplicates,removedDone,activeAfter:(await listQueue()).filter(x=>x.state!=='DONE').length};
+ }
+ async function localCounts(){const [drafts,images,locations,queue]=await Promise.all(['drafts','images','locations','queue'].map(allFrom));return{drafts:drafts.length,images:images.length,locations:locations.length,queue:queue.filter(x=>x.state!=='DONE').length}}
+ window.LocalDraftDB={getDraft,saveDraft,deleteDraft,listDrafts,saveImage,getImage,updateImage,listImages,listPendingImages,deleteImage,saveAssignments,getAssignments,saveLocation,getLocation,updateLocation,listLocations,enqueue,getQueue,updateQueue,listQueue,listFailedQueue,resetFailedQueue,removeQueue,setMeta,getMeta,storageStatus,requestPersistence,exportSnapshot,repairQueue,localCounts};
 })();
