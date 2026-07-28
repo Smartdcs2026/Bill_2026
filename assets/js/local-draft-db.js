@@ -31,10 +31,12 @@
  const getQueue=id=>request('queue','readonly',s=>s.get(id)).then(v=>v||null);
  const updateQueue=(id,patch)=>getQueue(id).then(v=>v?request('queue','readwrite',s=>s.put({...v,...patch,id,updatedAt:now()})):null);
  const listQueue=()=>request('queue','readonly',s=>s.getAll()).then(v=>v||[]);
+ const listFailedQueue=()=>listQueue().then(v=>(v||[]).filter(x=>x.state==='FAILED'));
+ const resetFailedQueue=async(assignmentId='')=>{const rows=await listFailedQueue();for(const row of rows.filter(x=>!assignmentId||String(x.assignmentId)===String(assignmentId)))await updateQueue(row.id,{state:'QUEUED',nextRetryAt:null,lastError:null});return true};
  const removeQueue=id=>request('queue','readwrite',s=>s.delete(id));
  const setMeta=(key,value)=>request('meta','readwrite',s=>s.put({key,value,updatedAt:now()}));
  const getMeta=key=>request('meta','readonly',s=>s.get(key)).then(v=>v?.value??null);
  async function storageStatus(){const e=await navigator.storage?.estimate?.();return{usage:e?.usage||0,quota:e?.quota||0,persisted:await navigator.storage?.persisted?.()||false}}
  const requestPersistence=()=>navigator.storage?.persist?.()||false;
- window.LocalDraftDB={getDraft,saveDraft,deleteDraft,listDrafts,saveImage,getImage,updateImage,listImages,listPendingImages,deleteImage,saveAssignments,getAssignments,saveLocation,getLocation,updateLocation,listLocations,enqueue,getQueue,updateQueue,listQueue,removeQueue,setMeta,getMeta,storageStatus,requestPersistence};
+ window.LocalDraftDB={getDraft,saveDraft,deleteDraft,listDrafts,saveImage,getImage,updateImage,listImages,listPendingImages,deleteImage,saveAssignments,getAssignments,saveLocation,getLocation,updateLocation,listLocations,enqueue,getQueue,updateQueue,listQueue,listFailedQueue,resetFailedQueue,removeQueue,setMeta,getMeta,storageStatus,requestPersistence};
 })();

@@ -1,11 +1,14 @@
 (()=>{const $=id=>document.getElementById(id);let data={assignments:[],readOnlyStatuses:[]},all=[],shown=[],drafts=new Map(),openId=null,selectedDate='',cursor=new Date(),loading=false,timer=0,onlineVerified=false,syncing=false;const ro=['SUBMITTED','UNDER_REVIEW','APPROVED','NOT_PAYABLE','PAID','CLOSED'];const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const timeout=(p,ms,label)=>Promise.race([Promise.resolve(p),new Promise((_,r)=>setTimeout(()=>r(new Error(`${label}ใช้เวลานานเกินไป`)),ms))]);const dateOf=a=>String(a.workDate||a.work_date||a.date||a.store?.workDate||'').slice(0,10);const dateLabel=v=>{if(!v)return'ทุกวันที่มีงาน';const[y,m,d]=v.split('-').map(Number);return new Intl.DateTimeFormat('th-TH',{weekday:'short',day:'numeric',month:'short',year:'numeric'}).format(new Date(y,m-1,d))};const monthLabel=d=>new Intl.DateTimeFormat('th-TH',{month:'long',year:'numeric'}).format(d);const brand=a=>(String(a.store?.brand||a.brand||'RI').match(/[A-Za-z0-9]+/)?.[0]||'RI').toUpperCase().slice(0,3);const posCodes=a=>Array.isArray(a.store?.posCodes)&&a.store.posCodes.length?a.store.posCodes:Array.from({length:Math.max(1,Number(a.store?.posCount||a.store?.pos||1))},(_,i)=>`POS${i+1}`);const draft=a=>drafts.get(a.id)||{assignmentId:a.id,pos:{},notes:''};const isRO=a=>(data.readOnlyStatuses||ro).includes(a.status);const userKey=()=>{try{const u=JSON.parse(localStorage.getItem('csi_user')||'null');return u?.id||u?.employeeCode||u?.employee_code||'field'}catch{return'field'}};const setConnection=(mode,text)=>{const b=$('connectionBar');if(!b)return;b.className=`connection-bar ${mode}`;$('connectionText').textContent=text};const status=s=>({ASSIGNED:'ยังไม่เริ่ม',DRAFT:'กำลังทำ',SUBMITTED:'ส่งแล้ว',UNDER_REVIEW:'กำลังตรวจ',APPROVED:'อนุมัติแล้ว',NOT_PAYABLE:'ไม่อนุมัติ',PAID:'จ่ายแล้ว',CLOSED:'ปิดงาน'})[s]||s||'ยังไม่เริ่ม';
+const retryDelay=count=>Math.min(15*60*1000,Math.max(15000,15000*Math.pow(2,Math.max(0,Number(count||0)-1))));const retryReady=q=>!q.nextRetryAt||Date.now()>=new Date(q.nextRetryAt).getTime();const queueTypeLabel=t=>({IMAGE_UPLOAD:'รูปภาพ',LOCATION_UPDATE:'พิกัด',SUBMISSION:'ส่งงาน'})[t]||t||'ข้อมูล';
 
 
 async function pendingSummary(){
  const [queue,allDrafts]=await Promise.all([LocalDraftDB.listQueue(),LocalDraftDB.listDrafts()]);
  const pending=(queue||[]).filter(q=>q.state!=='DONE');
+ const failed=pending.filter(q=>q.state==='FAILED');
+ const waiting=failed.filter(q=>!retryReady(q));
  const ready=(allDrafts||[]).filter(d=>d.state==='READY_TO_SUBMIT');
- return {pending:pending.length,ready:ready.length,assignmentIds:[...new Set([...pending.map(q=>q.assignmentId),...ready.map(d=>d.assignmentId)].filter(Boolean))]};
+ return {pending:pending.length,failed:failed.length,waiting:waiting.length,ready:ready.length,assignmentIds:[...new Set([...pending.map(q=>q.assignmentId),...ready.map(d=>d.assignmentId)].filter(Boolean))]};
 }
 async function refreshSyncStatus(){
  try{
@@ -119,7 +122,7 @@ async function requireOnlineLogin(reason){
 function blobToBase64(blob){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result||'').split(',')[1]||'');r.onerror=()=>reject(r.error||new Error('อ่านรูปไม่สำเร็จ'));r.readAsDataURL(blob)})}
 async function sha256Blob(blob){const b=await blob.arrayBuffer();const h=await crypto.subtle.digest('SHA-256',b);return [...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,'0')).join('')}
 async function processQueue(assignmentId){
- const items=(await LocalDraftDB.listQueue()).filter(q=>q.assignmentId===assignmentId&&q.state!=='DONE').sort((a,b)=>String(a.createdAt).localeCompare(String(b.createdAt)));
+ const items=(await LocalDraftDB.listQueue()).filter(q=>q.assignmentId===assignmentId&&q.state!=='DONE'&&retryReady(q)).sort((a,b)=>String(a.createdAt).localeCompare(String(b.createdAt)));
  let done=0;
  for(const q of items){
   await LocalDraftDB.updateQueue(q.id,{state:'PROCESSING',lastError:null});
@@ -138,7 +141,7 @@ async function processQueue(assignmentId){
    await LocalDraftDB.updateQueue(q.id,{state:'DONE',completedAt:new Date().toISOString()});done++;
    setConnection('online',`กำลังส่งข้อมูล ${done}/${items.length}`);
   }catch(e){
-   await LocalDraftDB.updateQueue(q.id,{state:'FAILED',lastError:e.message||String(e),retryCount:Number(q.retryCount||0)+1});
+   const retryCount=Number(q.retryCount||0)+1;await LocalDraftDB.updateQueue(q.id,{state:'FAILED',lastError:e.message||String(e),retryCount,nextRetryAt:new Date(Date.now()+retryDelay(retryCount)).toISOString(),lastAttemptAt:new Date().toISOString()});
    if(q.imageId)await LocalDraftDB.updateImage(q.imageId,{state:'FAILED'});
    throw e;
   }
@@ -165,6 +168,7 @@ async function syncPending(options={}){
    try{
     setConnection('syncing',`กำลังซิงก์งาน ${success+failed+1}/${state.assignmentIds.length}`);
     await processQueue(assignmentId);
+    const remainingForAssignment=(await LocalDraftDB.listQueue()).filter(q=>String(q.assignmentId)===String(assignmentId)&&q.state!=='DONE');if(remainingForAssignment.length)throw new Error('ยังมีข้อมูลรอส่งตามรอบลองใหม่');
     const d=await LocalDraftDB.getDraft(assignmentId);
     if(d?.state==='READY_TO_SUBMIT')await finalizeSubmission(a,d);
     success++;
@@ -219,6 +223,16 @@ async function submit(a){
  }
 }
 
+
+function ensureSyncCenter(){
+ if(document.getElementById('syncCenterSheet'))return;
+ const menu=document.querySelector('#menuSheet .menu');
+ if(menu&&!document.getElementById('syncCenterBtn')){const b=document.createElement('button');b.id='syncCenterBtn';b.type='button';b.textContent='ศูนย์ตรวจสอบการส่งข้อมูล';menu.insertBefore(b,menu.querySelector('.danger'));b.onclick=()=>{closeSheet('menuSheet');openSyncCenter()}}
+ const wrap=document.createElement('div');wrap.id='syncCenterSheet';wrap.className='overlay hidden';wrap.innerHTML=`<section class="sheet sync-center"><div class="handle"></div><header><span><small>OFFLINE DELIVERY</small><h2>ศูนย์ตรวจสอบการส่งข้อมูล</h2></span><button id="closeSyncCenterBtn" type="button">×</button></header><div id="syncCenterSummary" class="sync-center-summary"></div><div id="syncCenterList" class="sync-center-list"></div><div class="sync-center-actions"><button id="retryFailedBtn" type="button">ลองส่งรายการที่ผิดพลาดอีกครั้ง</button></div></section>`;document.body.appendChild(wrap);wrap.onclick=e=>{if(e.target===wrap)closeSheet('syncCenterSheet')};document.getElementById('closeSyncCenterBtn').onclick=()=>closeSheet('syncCenterSheet');document.getElementById('retryFailedBtn').onclick=retryFailedNow;
+}
+async function openSyncCenter(){ensureSyncCenter();const [queue,storage]=await Promise.all([LocalDraftDB.listQueue(),LocalDraftDB.storageStatus().catch(()=>({usage:0,quota:0,persisted:false}))]);const active=(queue||[]).filter(q=>q.state!=='DONE').sort((a,b)=>String(b.updatedAt||'').localeCompare(String(a.updatedAt||'')));const failed=active.filter(q=>q.state==='FAILED');const mb=n=>`${(Number(n||0)/1048576).toFixed(1)} MB`;document.getElementById('syncCenterSummary').innerHTML=`<span><b>${active.length}</b><small>รอส่ง</small></span><span><b>${failed.length}</b><small>ผิดพลาด</small></span><span><b>${storage.quota?Math.round(storage.usage/storage.quota*100):0}%</b><small>พื้นที่เครื่อง</small></span><span><b>${storage.persisted?'ปลอดภัย':'ทั่วไป'}</b><small>การเก็บข้อมูล</small></span>`;document.getElementById('syncCenterList').innerHTML=active.length?active.map(q=>`<article><span><b>${queueTypeLabel(q.type)} · ${esc(q.assignmentId||'-')}</b><small>${q.state==='FAILED'?esc(q.lastError||'ส่งไม่สำเร็จ'):'รอส่งเข้าระบบ'}${q.nextRetryAt?` · ลองใหม่ ${esc(new Date(q.nextRetryAt).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}))}`:''}</small></span><em class="${String(q.state).toLowerCase()}">${esc(q.state)}</em></article>`).join(''):`<div class="sync-center-empty">ไม่มีข้อมูลค้างส่งในโทรศัพท์</div>`;document.getElementById('retryFailedBtn').disabled=!failed.length;openSheet('syncCenterSheet')}
+async function retryFailedNow(){if(!(await requireOnlineLogin('กรุณาเข้าสู่ระบบก่อนลองส่งข้อมูลอีกครั้ง')))return;await LocalDraftDB.resetFailedQueue();closeSheet('syncCenterSheet');UI.loading('กำลังลองส่งข้อมูลอีกครั้ง…');try{const r=await syncPending();if(r.failed)await UI.error('ยังส่งได้ไม่ครบ',`สำเร็จ ${r.success} งาน · เหลือ ${r.failed} งาน`);else await UI.success('ส่งข้อมูลสำเร็จ','รายการที่ค้างถูกส่งเรียบร้อยแล้ว')}catch(e){await UI.error('ยังส่งไม่สำเร็จ',e.message||'กรุณาลองอีกครั้ง')}finally{UI.close();refreshSyncStatus()}}
+
 $('jobList').onclick=async e=>{const emptyAction=e.target.closest('[data-empty-action]')?.dataset.emptyAction;if(emptyAction==='refresh'){if(await requireOnlineLogin('กรุณาเข้าสู่ระบบก่อนอัปเดตรายการงาน'))load(true);return}const c=e.target.closest('.store');if(!c)return;const a=all.find(x=>String(x.id)===c.dataset.id),act=e.target.closest('[data-action]')?.dataset.action;if(!a||!act)return;if(act==='toggle'){openId=openId===a.id?null:a.id;render();if(openId)setTimeout(()=>{document.querySelector(`.store[data-id="${CSS.escape(String(a.id))}"]`)?.scrollIntoView({behavior:'smooth',block:'start'});photoCounts(a)},50)}if(act==='map'){const s=a.store||{},q=s.latitude&&s.longitude?`${s.latitude},${s.longitude}`:encodeURIComponent(s.address||s.storeName||'');open(`https://www.google.com/maps/search/?api=1&query=${q}`,'_blank')}if(act==='save')await save(a);if(act==='location')await captureLocation(a);if(act==='submit')await submit(a);if(act==='deleteImage'){const id=e.target.closest('[data-image-id]')?.dataset.imageId;if(id){const confirm=await UI.confirm('ลบรูปนี้?','รูปจะถูกลบออกจากโทรศัพท์','ลบรูป');if(confirm.isConfirmed){await LocalDraftDB.deleteImage(id);await photoCounts(a);await UI.success('ลบรูปแล้ว','')}}}if(['receiptCamera','receiptGallery','storeCamera','storeGallery'].includes(act))c.querySelector(`.${act}`)?.click()}
 $('jobList').onchange=async e=>{const c=e.target.closest('.store');if(!c||!e.target.matches('.hidden-file'))return;const a=all.find(x=>String(x.id)===c.dataset.id);await addFiles(a,[...e.target.files],e.target.dataset.category);e.target.value=''}
 $('jobList').oninput=e=>{const c=e.target.closest('.store');if(!c)return;const a=all.find(x=>String(x.id)===c.dataset.id);clearTimeout(timer);$('draftStatus').textContent='กำลังบันทึก…';timer=setTimeout(async()=>{try{await save(a,false);$('draftStatus').textContent='บันทึกแล้ว'}catch{$('draftStatus').textContent='กดบันทึกไว้ก่อน'}},650)}
@@ -232,4 +246,4 @@ async function load(forceOnline=false){if(loading)return;loading=true;if(forceOn
  const token=localStorage.getItem('csi_session_token');if(!token&&!forceOnline){if(!cached?.items?.length){all=[];apply();setConnection('local','ยังไม่มีแผนงานในเครื่อง กรุณาเข้าสู่ระบบเพื่ออัปเดต')}return}
  const[r,p]=await Promise.all([timeout(Api.request('/api/field/assignments'),15000,'การโหลดงาน'),timeout(Api.request('/api/field/bootstrap'),10000,'การตรวจสอบผู้ใช้').catch(()=>null)]);if(!r||!Array.isArray(r.assignments))throw new Error('ข้อมูลรายการงานไม่ถูกต้อง');if(p?.user?.displayName){$('userName').textContent=p.user.displayName;localStorage.setItem('csi_user',JSON.stringify(p.user))}else if(!cachedUser?.displayName)$('userName').textContent='ผู้ปฏิบัติงาน';data={...r,readOnlyStatuses:Array.isArray(r.readOnlyStatuses)?r.readOnlyStatuses:ro};all=r.assignments;await LocalDraftDB.saveAssignments(all,userKey());await LocalDraftDB.setMeta('last_sync_at',new Date().toISOString());onlineVerified=true;setConnection('online',`ออนไลน์ · อัปเดตล่าสุด ${new Date().toLocaleString('th-TH')}`);setTimeout(()=>syncPending({silent:true}).catch(()=>refreshSyncStatus()),250);const d=all.map(dateOf).find(Boolean);if(d){const[y,m]=d.split('-').map(Number);cursor=new Date(y,m-1,1)}selectedDate='';openId=null;apply()}catch(e){console.error(e);const cached=await LocalDraftDB.getAssignments(userKey());if(cached?.items?.length){all=cached.items;data={assignments:all,readOnlyStatuses:ro};apply();setConnection('local','ทำงานในเครื่อง · ยังไม่ได้อัปเดตจากระบบ');if(forceOnline)await UI.error('อัปเดตงานไม่สำเร็จ','ยังใช้แผนงานที่เก็บไว้ในโทรศัพท์ได้ตามปกติ')}else{all=[];apply();setConnection('local','ไม่สามารถเชื่อมต่อระบบได้');if(forceOnline)await UI.error('โหลดงานไม่สำเร็จ',e.message||'ไม่สามารถโหลดงานได้')}}finally{UI.close();loading=false}}
 window.addEventListener('online',()=>{refreshSyncStatus();setTimeout(()=>syncPending({silent:true}).catch(()=>refreshSyncStatus()),500)});window.addEventListener('offline',()=>setConnection('local','ทำงานในเครื่อง · ข้อมูลจะส่งเมื่อออนไลน์'));
-(async()=>{try{if(navigator.storage?.persist)timeout(LocalDraftDB.requestPersistence(),3000,'การเตรียมพื้นที่').catch(()=>{})}catch{}await load()})()})();
+(async()=>{ensureSyncCenter();try{if(navigator.storage?.persist)timeout(LocalDraftDB.requestPersistence(),3000,'การเตรียมพื้นที่').catch(()=>{})}catch{}await load()})()})();
