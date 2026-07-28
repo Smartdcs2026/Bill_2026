@@ -98,9 +98,34 @@ function posRow(d,code,locked){
  </div>`;
 }
 
+function withTimeout(promise,ms,label='การเชื่อมต่อ'){
+ let timer;
+ return Promise.race([
+  Promise.resolve(promise).finally(()=>clearTimeout(timer)),
+  new Promise((_,reject)=>{
+   timer=setTimeout(()=>reject(new Error(`${label}ใช้เวลานานเกินไป กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่`)),ms);
+  })
+ ]);
+}
+
+function cachedUser(){
+ try{
+  const raw=localStorage.getItem('csi_user');
+  if(!raw)return null;
+  const u=JSON.parse(raw);
+  return u&&typeof u==='object'?u:null;
+ }catch(_){return null}
+}
+
 async function hydrate(){
- const list=await LocalDraftDB.listDrafts();
- drafts=new Map(list.map(x=>[x.assignmentId,x]));
+ try{
+  const list=await withTimeout(LocalDraftDB.listDrafts(),5000,'การเปิดข้อมูลฉบับร่าง');
+  drafts=new Map((list||[]).map(x=>[x.assignmentId,x]));
+ }catch(e){
+  console.warn('Draft storage unavailable:',e);
+  drafts=new Map();
+  $('draftStatus').textContent='พร้อมกรอกงาน';
+ }
 }
 
 function collect(a){
@@ -216,24 +241,99 @@ $('draftNavBtn').onclick=()=>{
 };
 $('topBtn').onclick=()=>scrollTo({top:0,behavior:'smooth'});
 
+let loadingJobs=false;
+
 async function load(month=''){
+ if(loadingJobs)return;
+ loadingJobs=true;
+ UI.loading('กำลังโหลดงาน…');
+
  try{
-  UI.loading('กำลังโหลดงาน…');
-  const boot=await Api.request('/api/field/bootstrap');
-  $('userName').textContent=boot.user.displayName;
-  const r=await Api.request('/api/field/assignments'+(month?`?month=${month}`:''));
-  data=r;
-  $('monthSelect').innerHTML=`<option value="${r.currentMonth}">เดือนปัจจุบัน</option><option value="${r.previousMonth}">เดือนก่อนหน้า</option>`;
-  $('monthSelect').value=r.month;
-  await hydrate();render();UI.close();
+  const cached=cachedUser();
+  if(cached?.displayName)$('userName').textContent=cached.displayName;
+
+  const assignmentPath='/api/field/assignments'+(month?`?month=${encodeURIComponent(month)}`:'');
+  const assignmentPromise=withTimeout(
+   Api.request(assignmentPath),
+   15000,
+   'การโหลดรายการงาน'
+  );
+
+  const profilePromise=withTimeout(
+   Api.request('/api/field/bootstrap'),
+   10000,
+   'การตรวจสอบผู้ใช้งาน'
+  ).catch(error=>{
+   console.warn('Profile fallback:',error);
+   return null;
+  });
+
+  const [r,boot]=await Promise.all([assignmentPromise,profilePromise]);
+
+  if(!r||!Array.isArray(r.assignments)){
+   throw new Error('รูปแบบข้อมูลรายการงานไม่ถูกต้อง กรุณาแจ้งผู้ดูแลระบบ');
+  }
+
+  if(boot?.user?.displayName){
+   $('userName').textContent=boot.user.displayName;
+   localStorage.setItem('csi_user',JSON.stringify(boot.user));
+  }else if(cached?.displayName){
+   $('userName').textContent=cached.displayName;
+  }else{
+   $('userName').textContent='ผู้ปฏิบัติงาน';
+  }
+
+  data={
+   ...r,
+   readOnlyStatuses:Array.isArray(r.readOnlyStatuses)
+    ?r.readOnlyStatuses
+    :['SUBMITTED','UNDER_REVIEW','APPROVED','NOT_PAYABLE','PAID','CLOSED']
+  };
+
+  const current=r.currentMonth||r.month||'';
+  const previous=r.previousMonth||'';
+  const options=[];
+  if(current)options.push(`<option value="${esc(current)}">เดือนปัจจุบัน</option>`);
+  if(previous&&previous!==current)options.push(`<option value="${esc(previous)}">เดือนก่อนหน้า</option>`);
+  $('monthSelect').innerHTML=options.join('');
+  if(r.month)$('monthSelect').value=r.month;
+
+  await hydrate();
+  render();
  }catch(e){
+  console.error('Field load failed:',e);
+  data={
+   assignments:[],
+   readOnlyStatuses:['SUBMITTED','UNDER_REVIEW','APPROVED','NOT_PAYABLE','PAID','CLOSED']
+  };
+  render();
+
+  const message=e?.message||'ระบบไม่สามารถโหลดรายการงานได้';
+  const unauthorized=/401|unauthorized|กรุณาเข้าสู่ระบบ/i.test(message);
+
+  await UI.error(
+   unauthorized?'กรุณาเข้าสู่ระบบใหม่':'โหลดงานไม่สำเร็จ',
+   unauthorized
+    ?'ข้อมูลการเข้าสู่ระบบหมดอายุ กรุณาสแกน QR และกรอกรหัสผ่านอีกครั้ง'
+    :`${message}\n\nระบบยกเลิกการรออัตโนมัติแล้ว จึงไม่ค้างหมุนตลอดเวลา`
+  );
+
+  if(unauthorized)location.href='login.html';
+ }finally{
   UI.close();
-  await UI.error('โหลดงานไม่สำเร็จ',e.message);
+  loadingJobs=false;
  }
 }
 
 (async()=>{
- if(navigator.storage?.persist)await LocalDraftDB.requestPersistence();
+ try{
+  if(navigator.storage?.persist){
+   withTimeout(LocalDraftDB.requestPersistence(),3000,'การเตรียมพื้นที่บันทึก')
+    .catch(error=>console.warn('Storage persistence skipped:',error));
+  }
+ }catch(error){
+  console.warn('Storage preparation skipped:',error);
+ }
  await load();
 })();
 })();
