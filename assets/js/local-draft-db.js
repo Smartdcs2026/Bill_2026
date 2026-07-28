@@ -54,5 +54,29 @@
   return {removedDuplicates,removedDone,activeAfter:(await listQueue()).filter(x=>x.state!=='DONE').length};
  }
  async function localCounts(){const [drafts,images,locations,queue]=await Promise.all(['drafts','images','locations','queue'].map(allFrom));return{drafts:drafts.length,images:images.length,locations:locations.length,queue:queue.filter(x=>x.state!=='DONE').length}}
- window.LocalDraftDB={getDraft,saveDraft,deleteDraft,listDrafts,saveImage,getImage,updateImage,listImages,listPendingImages,deleteImage,saveAssignments,getAssignments,saveLocation,getLocation,updateLocation,listLocations,enqueue,getQueue,updateQueue,listQueue,listFailedQueue,resetFailedQueue,removeQueue,setMeta,getMeta,storageStatus,requestPersistence,exportSnapshot,repairQueue,localCounts};
+ function validBackup(snapshot){return snapshot&&snapshot.format==='RetailInsightLocalBackup'&&Number(snapshot.version)===1&&snapshot.data&&typeof snapshot.data==='object'}
+ function newerOrEqual(incoming,current){const a=new Date(incoming?.updatedAt||incoming?.createdAt||0).getTime(),b=new Date(current?.updatedAt||current?.createdAt||0).getTime();return !current||!b||a>=b}
+ async function importSnapshot(snapshot,userKey='field'){
+  if(!validBackup(snapshot))throw new Error('รูปแบบไฟล์สำรองไม่ถูกต้อง');
+  if(String(snapshot.userKey||'')!==String(userKey||''))throw new Error('ไฟล์สำรองเป็นของผู้ใช้งานคนอื่น');
+  const data=snapshot.data||{},result={drafts:0,assignments:0,locations:0,queue:0,skippedImages:0,skippedQueue:0,olderSkipped:0};
+  for(const incoming of Array.isArray(data.drafts)?data.drafts:[]){
+   if(!incoming?.assignmentId)continue;const current=await getDraft(incoming.assignmentId);if(newerOrEqual(incoming,current)){await saveDraft({...incoming,state:incoming.state||'LOCAL_DRAFT'});result.drafts++}else result.olderSkipped++;
+  }
+  const assignmentRows=(Array.isArray(data.assignments)?data.assignments:[]).filter(x=>String(x?.key||'')===String(userKey));
+  if(assignmentRows.length){const incoming=assignmentRows.sort((a,b)=>String(b.updatedAt||'').localeCompare(String(a.updatedAt||'')))[0],current=await getAssignments(userKey);if(newerOrEqual(incoming,current)){await saveAssignments(Array.isArray(incoming.items)?incoming.items:[],userKey);result.assignments=Array.isArray(incoming.items)?incoming.items.length:0}else result.olderSkipped++}
+  for(const incoming of Array.isArray(data.locations)?data.locations:[]){
+   if(!incoming?.id||!incoming?.assignmentId)continue;const current=await getLocation(incoming.id);if(newerOrEqual(incoming,current)){await saveLocation(incoming);result.locations++}else result.olderSkipped++;
+  }
+  result.skippedImages=(Array.isArray(data.images)?data.images:[]).length;
+  for(const incoming of Array.isArray(data.queue)?data.queue:[]){
+   if(!incoming?.id||!incoming?.assignmentId||incoming.state==='DONE')continue;
+   if(incoming.type==='IMAGE_UPLOAD'){
+    const imageId=incoming.imageId||incoming.payload?.imageId;if(!imageId||!(await getImage(imageId))){result.skippedQueue++;continue}
+   }
+   const current=await getQueue(incoming.id);if(newerOrEqual(incoming,current)){await enqueue({...incoming,state:incoming.state==='PROCESSING'?'QUEUED':incoming.state,nextRetryAt:null});result.queue++}else result.olderSkipped++;
+  }
+  await setMeta('last_restore_at',now());return result;
+ }
+ window.LocalDraftDB={getDraft,saveDraft,deleteDraft,listDrafts,saveImage,getImage,updateImage,listImages,listPendingImages,deleteImage,saveAssignments,getAssignments,saveLocation,getLocation,updateLocation,listLocations,enqueue,getQueue,updateQueue,listQueue,listFailedQueue,resetFailedQueue,removeQueue,setMeta,getMeta,storageStatus,requestPersistence,exportSnapshot,importSnapshot,repairQueue,localCounts};
 })();
