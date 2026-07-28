@@ -1,25 +1,34 @@
 (function(){
- const DB_NAME='RetailInsightLocal',VERSION=1;
- function open(){
-  return new Promise((resolve,reject)=>{
-   const r=indexedDB.open(DB_NAME,VERSION);
-   r.onupgradeneeded=()=>{const db=r.result;
-    if(!db.objectStoreNames.contains('drafts')){const s=db.createObjectStore('drafts',{keyPath:'assignmentId'});s.createIndex('updatedAt','updatedAt')}
-    if(!db.objectStoreNames.contains('images')){const s=db.createObjectStore('images',{keyPath:'id'});s.createIndex('assignmentId','assignmentId')}
-    if(!db.objectStoreNames.contains('meta'))db.createObjectStore('meta',{keyPath:'key'});
-   };
-   r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
-  });
- }
- async function tx(store,mode,fn){const db=await open();return new Promise((resolve,reject)=>{const t=db.transaction(store,mode),s=t.objectStore(store);let result;try{result=fn(s)}catch(e){reject(e);return}t.oncomplete=()=>resolve(result?.result??result);t.onerror=()=>reject(t.error)})}
- async function getDraft(id){const db=await open();return new Promise((resolve,reject)=>{const r=db.transaction('drafts').objectStore('drafts').get(id);r.onsuccess=()=>resolve(r.result||null);r.onerror=()=>reject(r.error)})}
- async function saveDraft(d){return tx('drafts','readwrite',s=>s.put({...d,updatedAt:new Date().toISOString(),state:d.state||'LOCAL_DRAFT'}))}
- async function deleteDraft(id){return tx('drafts','readwrite',s=>s.delete(id))}
- async function listDrafts(){const db=await open();return new Promise((resolve,reject)=>{const r=db.transaction('drafts').objectStore('drafts').getAll();r.onsuccess=()=>resolve(r.result||[]);r.onerror=()=>reject(r.error)})}
- async function saveImage(img){return tx('images','readwrite',s=>s.put(img))}
- async function listImages(assignmentId){const db=await open();return new Promise((resolve,reject)=>{const r=db.transaction('images').objectStore('images').index('assignmentId').getAll(assignmentId);r.onsuccess=()=>resolve(r.result||[]);r.onerror=()=>reject(r.error)})}
- async function deleteImage(id){return tx('images','readwrite',s=>s.delete(id))}
- async function storageStatus(){const e=await navigator.storage?.estimate?.();return {usage:e?.usage||0,quota:e?.quota||0,persisted:await navigator.storage?.persisted?.()||false}}
- async function requestPersistence(){return navigator.storage?.persist?.()||false}
- window.LocalDraftDB={getDraft,saveDraft,deleteDraft,listDrafts,saveImage,listImages,deleteImage,storageStatus,requestPersistence};
+ 'use strict';
+ const DB_NAME='RetailInsightLocal',VERSION=2;
+ function open(){return new Promise((resolve,reject)=>{const r=indexedDB.open(DB_NAME,VERSION);r.onupgradeneeded=()=>{const db=r.result;
+  if(!db.objectStoreNames.contains('drafts')){const s=db.createObjectStore('drafts',{keyPath:'assignmentId'});s.createIndex('updatedAt','updatedAt')}
+  if(!db.objectStoreNames.contains('images')){const s=db.createObjectStore('images',{keyPath:'id'});s.createIndex('assignmentId','assignmentId');s.createIndex('state','state')}
+  if(!db.objectStoreNames.contains('assignments'))db.createObjectStore('assignments',{keyPath:'key'});
+  if(!db.objectStoreNames.contains('locations')){const s=db.createObjectStore('locations',{keyPath:'id'});s.createIndex('assignmentId','assignmentId');s.createIndex('state','state')}
+  if(!db.objectStoreNames.contains('queue')){const s=db.createObjectStore('queue',{keyPath:'id'});s.createIndex('state','state');s.createIndex('assignmentId','assignmentId')}
+  if(!db.objectStoreNames.contains('meta'))db.createObjectStore('meta',{keyPath:'key'});
+ };r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
+ async function request(store,mode,make){const db=await open();return new Promise((resolve,reject)=>{const t=db.transaction(store,mode),s=t.objectStore(store),r=make(s);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
+ const now=()=>new Date().toISOString();
+ const getDraft=id=>request('drafts','readonly',s=>s.get(id)).then(v=>v||null);
+ const saveDraft=d=>request('drafts','readwrite',s=>s.put({...d,updatedAt:now(),state:d.state||'LOCAL_DRAFT'}));
+ const deleteDraft=id=>request('drafts','readwrite',s=>s.delete(id));
+ const listDrafts=()=>request('drafts','readonly',s=>s.getAll()).then(v=>v||[]);
+ const saveImage=img=>request('images','readwrite',s=>s.put({...img,state:img.state||'LOCAL_ONLY',updatedAt:now()}));
+ const listImages=assignmentId=>request('images','readonly',s=>s.index('assignmentId').getAll(assignmentId)).then(v=>v||[]);
+ const listPendingImages=()=>request('images','readonly',s=>s.getAll()).then(v=>(v||[]).filter(x=>!['UPLOADED','VERIFIED'].includes(x.state)));
+ const deleteImage=id=>request('images','readwrite',s=>s.delete(id));
+ const saveAssignments=(items,userKey='default')=>request('assignments','readwrite',s=>s.put({key:userKey,items,updatedAt:now()}));
+ const getAssignments=(userKey='default')=>request('assignments','readonly',s=>s.get(userKey)).then(v=>v||null);
+ const saveLocation=loc=>request('locations','readwrite',s=>s.put({...loc,state:loc.state||'QUEUED',updatedAt:now()}));
+ const listLocations=assignmentId=>request('locations','readonly',s=>s.index('assignmentId').getAll(assignmentId)).then(v=>v||[]);
+ const enqueue=item=>request('queue','readwrite',s=>s.put({...item,id:item.id||crypto.randomUUID(),state:item.state||'QUEUED',createdAt:item.createdAt||now(),updatedAt:now()}));
+ const listQueue=()=>request('queue','readonly',s=>s.getAll()).then(v=>v||[]);
+ const removeQueue=id=>request('queue','readwrite',s=>s.delete(id));
+ const setMeta=(key,value)=>request('meta','readwrite',s=>s.put({key,value,updatedAt:now()}));
+ const getMeta=key=>request('meta','readonly',s=>s.get(key)).then(v=>v?.value??null);
+ async function storageStatus(){const e=await navigator.storage?.estimate?.();return{usage:e?.usage||0,quota:e?.quota||0,persisted:await navigator.storage?.persisted?.()||false}}
+ const requestPersistence=()=>navigator.storage?.persist?.()||false;
+ window.LocalDraftDB={getDraft,saveDraft,deleteDraft,listDrafts,saveImage,listImages,listPendingImages,deleteImage,saveAssignments,getAssignments,saveLocation,listLocations,enqueue,listQueue,removeQueue,setMeta,getMeta,storageStatus,requestPersistence};
 })();
