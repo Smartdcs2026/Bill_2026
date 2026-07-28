@@ -100,6 +100,46 @@ async function requireOnlineLogin(reason){
  }
 }
 
+
+function blobToBase64(blob){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result||'').split(',')[1]||'');r.onerror=()=>reject(r.error||new Error('อ่านรูปไม่สำเร็จ'));r.readAsDataURL(blob)})}
+async function sha256Blob(blob){const b=await blob.arrayBuffer();const h=await crypto.subtle.digest('SHA-256',b);return [...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+async function processQueue(assignmentId){
+ const items=(await LocalDraftDB.listQueue()).filter(q=>q.assignmentId===assignmentId&&q.state!=='DONE').sort((a,b)=>String(a.createdAt).localeCompare(String(b.createdAt)));
+ let done=0;
+ for(const q of items){
+  await LocalDraftDB.updateQueue(q.id,{state:'PROCESSING',lastError:null});
+  try{
+   if(q.type==='IMAGE_UPLOAD'){
+    const img=await LocalDraftDB.getImage(q.imageId);if(!img)throw new Error('ไม่พบรูปในโทรศัพท์');
+    await LocalDraftDB.updateImage(img.id,{state:'UPLOADING'});
+    const checksum=img.checksum||await sha256Blob(img.blob);
+    const result=await Api.request('/api/field/image-upload',{method:'POST',body:JSON.stringify({imageId:img.id,assignmentId:img.assignmentId,category:img.category,fileName:img.name||`${img.id}.jpg`,mimeType:img.type||'image/jpeg',size:img.size||img.blob.size,checksum,dataBase64:await blobToBase64(img.blob),capturedAt:img.createdAt})});
+    await LocalDraftDB.updateImage(img.id,{state:'VERIFIED',checksum,serverFileId:result.fileId||'',uploadedAt:new Date().toISOString()});
+   }else if(q.type==='LOCATION_UPDATE'){
+    const loc=await LocalDraftDB.getLocation(q.locationId);if(!loc)throw new Error('ไม่พบพิกัดในโทรศัพท์');
+    await Api.request('/api/field/location',{method:'POST',body:JSON.stringify(loc)});
+    await LocalDraftDB.updateLocation(loc.id,{state:'SYNCED',syncedAt:new Date().toISOString()});
+   }
+   await LocalDraftDB.updateQueue(q.id,{state:'DONE',completedAt:new Date().toISOString()});done++;
+   setConnection('online',`กำลังส่งข้อมูล ${done}/${items.length}`);
+  }catch(e){
+   await LocalDraftDB.updateQueue(q.id,{state:'FAILED',lastError:e.message||String(e),retryCount:Number(q.retryCount||0)+1});
+   if(q.imageId)await LocalDraftDB.updateImage(q.imageId,{state:'FAILED'});
+   throw e;
+  }
+ }
+ return {done,total:items.length};
+}
+async function finalizeSubmission(a,d){
+ const images=await LocalDraftDB.listImages(a.id);
+ const payload={assignmentId:a.id,pos:d.pos||{},notes:d.notes||'',location:d.location||null,imageIds:images.filter(x=>x.state==='VERIFIED').map(x=>x.id),validatedAt:d.validatedAt||new Date().toISOString(),clientSubmissionId:d.clientSubmissionId||crypto.randomUUID()};
+ const result=await Api.request('/api/field/submit',{method:'POST',body:JSON.stringify(payload)});
+ const submitted={...d,state:'SUBMITTED',submittedAt:new Date().toISOString(),clientSubmissionId:payload.clientSubmissionId,serverSubmissionId:result.submissionId||''};
+ await LocalDraftDB.saveDraft(submitted);drafts.set(a.id,submitted);
+ a.status='SUBMITTED';render();summary();if(openId===a.id)setTimeout(()=>photoCounts(a),20);
+ return result;
+}
+
 async function submit(a){
  await save(a,false);
  const check=await validateBeforeSubmit(a);
@@ -124,13 +164,10 @@ async function submit(a){
  );
  if(c.isConfirmed){
   if(!(await requireOnlineLogin('กรุณาเข้าสู่ระบบก่อนส่งข้อมูลงาน')))return;
-  const d={...check.d,state:'READY_TO_SUBMIT',validatedAt:new Date().toISOString()};
-  await LocalDraftDB.saveDraft(d);
-  drafts.set(a.id,d);
-  render();
-  summary();
-  if(openId===a.id)setTimeout(()=>photoCounts(a),20);
-  await UI.success('ตรวจสอบครบแล้ว','งานถูกเก็บเป็นสถานะพร้อมส่งในโทรศัพท์ ขั้นตอนอัปโหลดขึ้นระบบจะเชื่อมต่อในรอบถัดไป');
+  const d={...check.d,state:'READY_TO_SUBMIT',validatedAt:new Date().toISOString(),clientSubmissionId:check.d.clientSubmissionId||crypto.randomUUID()};
+  await LocalDraftDB.saveDraft(d);drafts.set(a.id,d);render();summary();if(openId===a.id)setTimeout(()=>photoCounts(a),20);
+  UI.loading('กำลังส่งข้อมูลงาน…');
+  try{const progress=await processQueue(a.id);await finalizeSubmission(a,d);await UI.success('ส่งงานสำเร็จ',`ส่งรูปและพิกัดครบแล้ว${progress.total?` ${progress.total} รายการ`:''} รูปต้นฉบับยังอยู่ในโทรศัพท์`)}catch(e){setConnection('local','ส่งไม่ครบ · ระบบเก็บข้อมูลไว้ในโทรศัพท์');await UI.error('ส่งงานยังไม่สำเร็จ',`${e.message||'การเชื่อมต่อขัดข้อง'} ข้อมูลและรูปยังอยู่ในโทรศัพท์ สามารถกดส่งอีกครั้งได้`)}finally{UI.close()}
  }
 }
 
