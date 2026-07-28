@@ -1,174 +1,157 @@
-<!doctype html>
+<!DOCTYPE html>
+
 <html lang="th">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#102a56">
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<meta content="#102a56" name="theme-color"/>
 <title>RetailInsight — ผู้ใช้งานและ QR</title>
-<link rel="stylesheet" href="assets/css/admin-console.css">
+<link href="assets/css/admin-console.css?v=R05S01" rel="stylesheet"/>
 </head>
 <body>
 <header class="admin-top">
-  <button class="menu-btn" id="menuBtn" type="button" aria-label="เปิดเมนู">☰</button>
-  <div class="admin-brand">
-    <span class="brand-symbol">RI</span>
-    <span class="brand-copy"><b>RetailInsight</b><small>Administration</small></span>
-  </div>
-  <div class="top-spacer"></div>
-  <div class="admin-account">
-    <span class="online-dot"></span>
-    <span>Admin</span>
-  </div>
+<button aria-label="เปิดเมนู" class="menu-btn" id="menuBtn" type="button">☰</button>
+<div class="admin-brand">
+<span class="brand-symbol">RI</span>
+<span class="brand-copy"><b>RetailInsight</b><small>Administration</small></span>
+</div>
+<div class="top-spacer"></div>
+<div class="admin-account">
+<span class="online-dot"></span>
+<span>Admin</span>
+<small class="build-badge" title="เวอร์ชันหน้าจอผู้ดูแลระบบ">R05-S01</small></div>
 </header>
-
 <div class="admin-layout">
-<aside class="side" id="side">
-  <div class="nav-section">จัดการระบบ</div>
-  <a href="admin-users.html" class="active"><span class="nav-icon">U</span><span>ผู้ใช้งานและ QR</span></a>
-  <a href="admin-user-month-import.html"><span class="nav-icon">M</span><span>งานรายบุคคล</span></a>
-  <a href="admin-import.html"><span class="nav-icon">S</span><span>ข้อมูลร้าน</span></a>
-  <a href="admin-field-visibility.html"><span class="nav-icon">V</span><span>การมองเห็นข้อมูล</span></a>
-  <a href="admin-database-health.html"><span class="nav-icon">D</span><span>สถานะฐานข้อมูล</span></a>
-  <div class="nav-section nav-section-bottom">บัญชี</div>
-  <a href="admin-login.html"><span class="nav-icon">↪</span><span>ออกจากระบบ</span></a>
-</aside>
-
+<aside class="side" id="side"><div class="nav-section">จัดการระบบ</div><a href="admin.html"><span class="nav-icon">H</span><span>หน้าหลัก Admin</span></a><a class="active" href="admin-users.html"><span class="nav-icon">U</span><span>ผู้ใช้งานและ QR</span></a><a href="admin-user-month-import.html"><span class="nav-icon">M</span><span>งานรายบุคคล</span></a><a href="admin-import.html"><span class="nav-icon">S</span><span>ข้อมูลร้านและแผนงาน</span></a><a href="admin-pos-management.html"><span class="nav-icon">P</span><span>จัดการเครื่อง POS</span></a><a href="admin-receipt-policies.html"><span class="nav-icon">R</span><span>นโยบายการอ่านบิล</span></a><a href="admin-pos-reasons.html"><span class="nav-icon">E</span><span>เหตุผลกรณี POS ไม่มีข้อมูล</span></a><a href="admin-field-visibility.html"><span class="nav-icon">V</span><span>การมองเห็นข้อมูล</span></a><a href="admin-database-health.html"><span class="nav-icon">D</span><span>สถานะฐานข้อมูล</span></a><div class="nav-section nav-section-bottom">บัญชี</div><a href="admin-login.html"><span class="nav-icon">↪</span><span>ออกจากระบบ</span></a></aside>
 <main class="content">
-  <div class="page-head">
-    <div>
-      <div class="eyebrow">IDENTITY & ACCESS</div>
-      <h1>ผู้ใช้งานและ QR</h1>
-      <p>บริหารบัญชี สิทธิ์ และ QR ประจำตัวผู้ปฏิบัติงานจากหน้าจอเดียว</p>
-    </div>
-    <button id="newUserBtn" class="btn primary create-btn" type="button">
-      <span>＋</span> เพิ่มผู้ใช้งาน
+<div class="page-head">
+<div>
+<div class="eyebrow">IDENTITY &amp; ACCESS</div>
+<h1>ผู้ใช้งานและ QR</h1>
+<p>บริหารบัญชี สิทธิ์ และ QR ประจำตัวผู้ปฏิบัติงานจากหน้าจอเดียว</p>
+</div>
+<button class="btn primary create-btn" id="newUserBtn" type="button">
+<span>＋</span> เพิ่มผู้ใช้งาน
     </button>
-  </div>
-
-  <section class="metric-grid" aria-label="สรุปผู้ใช้งาน">
-    <article class="metric metric-total">
-      <div class="metric-icon">Σ</div>
-      <div><span>ผู้ใช้งานทั้งหมด</span><b id="metricTotal">0</b></div>
-    </article>
-    <article class="metric metric-field">
-      <div class="metric-icon">F</div>
-      <div><span>ผู้ปฏิบัติงาน</span><b id="metricField">0</b></div>
-    </article>
-    <article class="metric metric-qr">
-      <div class="metric-icon">QR</div>
-      <div><span>QR ที่ใช้งาน</span><b id="metricQr">0</b></div>
-    </article>
-    <article class="metric metric-off">
-      <div class="metric-icon">—</div>
-      <div><span>บัญชีที่ปิด</span><b id="metricOff">0</b></div>
-    </article>
-  </section>
-
-  <section class="panel">
-    <div class="panel-toolbar">
-      <div class="toolbar-title">
-        <b>บัญชีทั้งหมด</b>
-        <span id="usersStatus">กำลังเตรียมข้อมูล…</span>
-      </div>
-      <div class="filters">
-        <label class="search-box">
-          <span class="search-icon">⌕</span>
-          <input id="userSearch" placeholder="ค้นหาชื่อ รหัสพนักงาน หรือ Username" autocomplete="off">
-          <button id="clearSearchBtn" class="clear-search" type="button" aria-label="ล้างคำค้น">×</button>
-        </label>
-        <label class="filter-field">
-          <span>สิทธิ์</span>
-          <select id="roleFilter">
-            <option value="">ทุกสิทธิ์</option>
-            <option value="FIELD_USER">ผู้ปฏิบัติงาน</option>
-            <option value="REVIEWER">หัวหน้างาน</option>
-            <option value="ADMIN">Admin</option>
-            <option value="FINANCE">การเงิน</option>
-            <option value="EXECUTIVE">ผู้บริหาร</option>
-          </select>
-        </label>
-        <label class="filter-field">
-          <span>สถานะ</span>
-          <select id="statusFilter">
-            <option value="ALL">ทุกสถานะ</option>
-            <option value="ACTIVE">เปิดใช้งาน</option>
-            <option value="INACTIVE">ปิดใช้งาน</option>
-          </select>
-        </label>
-        <button id="refreshUsersBtn" class="btn secondary refresh-btn" type="button">รีเฟรช</button>
-      </div>
-    </div>
-
-    <div class="table-wrap">
-      <table class="users-table">
-        <thead>
-          <tr>
-            <th class="col-user">ผู้ใช้งาน</th>
-            <th>รหัสพนักงาน</th>
-            <th>สิทธิ์</th>
-            <th>บัญชี</th>
-            <th>QR ประจำตัว</th>
-            <th>ใช้งาน QR ล่าสุด</th>
-            <th class="col-action">จัดการ</th>
-          </tr>
-        </thead>
-        <tbody id="usersBody"></tbody>
-      </table>
-    </div>
-
-    <div class="mobile-user-list" id="mobileUsers"></div>
-  </section>
+</div>
+<section aria-label="สรุปผู้ใช้งาน" class="metric-grid">
+<article class="metric metric-total">
+<div class="metric-icon">Σ</div>
+<div><span>ผู้ใช้งานทั้งหมด</span><b id="metricTotal">0</b></div>
+</article>
+<article class="metric metric-field">
+<div class="metric-icon">F</div>
+<div><span>ผู้ปฏิบัติงาน</span><b id="metricField">0</b></div>
+</article>
+<article class="metric metric-qr">
+<div class="metric-icon">QR</div>
+<div><span>QR ที่ใช้งาน</span><b id="metricQr">0</b></div>
+</article>
+<article class="metric metric-off">
+<div class="metric-icon">—</div>
+<div><span>บัญชีที่ปิด</span><b id="metricOff">0</b></div>
+</article>
+</section>
+<section class="panel">
+<div class="panel-toolbar">
+<div class="toolbar-title">
+<b>บัญชีทั้งหมด</b>
+<span id="usersStatus">กำลังเตรียมข้อมูล…</span>
+</div>
+<div class="filters">
+<label class="search-box">
+<span class="search-icon">⌕</span>
+<input autocomplete="off" id="userSearch" placeholder="ค้นหาชื่อ รหัสพนักงาน หรือ Username"/>
+<button aria-label="ล้างคำค้น" class="clear-search" id="clearSearchBtn" type="button">×</button>
+</label>
+<label class="filter-field">
+<span>สิทธิ์</span>
+<select id="roleFilter">
+<option value="">ทุกสิทธิ์</option>
+<option value="FIELD_USER">ผู้ปฏิบัติงาน</option>
+<option value="REVIEWER">หัวหน้างาน</option>
+<option value="ADMIN">Admin</option>
+<option value="FINANCE">การเงิน</option>
+<option value="EXECUTIVE">ผู้บริหาร</option>
+</select>
+</label>
+<label class="filter-field">
+<span>สถานะ</span>
+<select id="statusFilter">
+<option value="ALL">ทุกสถานะ</option>
+<option value="ACTIVE">เปิดใช้งาน</option>
+<option value="INACTIVE">ปิดใช้งาน</option>
+</select>
+</label>
+<button class="btn secondary refresh-btn" id="refreshUsersBtn" type="button">รีเฟรช</button>
+</div>
+</div>
+<div class="table-wrap">
+<table class="users-table">
+<thead>
+<tr>
+<th class="col-user">ผู้ใช้งาน</th>
+<th>รหัสพนักงาน</th>
+<th>สิทธิ์</th>
+<th>บัญชี</th>
+<th>QR ประจำตัว</th>
+<th>ใช้งาน QR ล่าสุด</th>
+<th class="col-action">จัดการ</th>
+</tr>
+</thead>
+<tbody id="usersBody"></tbody>
+</table>
+</div>
+<div class="mobile-user-list" id="mobileUsers"></div>
+</section>
 </main>
 </div>
-
-<div id="actionMenu" class="action-menu hidden" role="menu" aria-hidden="true"></div>
-
+<div aria-hidden="true" class="action-menu hidden" id="actionMenu" role="menu"></div>
 <dialog id="userDialog">
-  <form method="dialog" class="dialog-card">
-    <div class="dialog-head">
-      <div>
-        <small>USER PROFILE</small>
-        <h3 id="userDialogTitle">เพิ่มผู้ใช้งาน</h3>
-      </div>
-      <button id="closeUserDialog" class="icon-btn" type="button" aria-label="ปิด">×</button>
-    </div>
-    <input id="editUserId" type="hidden">
-    <div class="form-grid">
-      <label class="full">ชื่อผู้ใช้งาน
-        <input id="editDisplayName" autocomplete="name" placeholder="ชื่อที่ใช้แสดงในระบบ">
-      </label>
-      <label>Username
-        <input id="editUsername" autocomplete="off" placeholder="ตัวอักษรอังกฤษ/ตัวเลข">
-      </label>
-      <label>รหัสพนักงาน
-        <input id="editEmployeeCode" autocomplete="off" placeholder="เช่น 23841666">
-      </label>
-      <label class="full">รหัสผ่าน
+<form class="dialog-card" method="dialog">
+<div class="dialog-head">
+<div>
+<small>USER PROFILE</small>
+<h3 id="userDialogTitle">เพิ่มผู้ใช้งาน</h3>
+</div>
+<button aria-label="ปิด" class="icon-btn" id="closeUserDialog" type="button">×</button>
+</div>
+<input id="editUserId" type="hidden"/>
+<div class="form-grid">
+<label class="full">ชื่อผู้ใช้งาน
+        <input autocomplete="name" id="editDisplayName" placeholder="ชื่อที่ใช้แสดงในระบบ"/>
+</label>
+<label>Username
+        <input autocomplete="off" id="editUsername" placeholder="ตัวอักษรอังกฤษ/ตัวเลข"/>
+</label>
+<label>รหัสพนักงาน
+        <input autocomplete="off" id="editEmployeeCode" placeholder="เช่น 23841666"/>
+</label>
+<label class="full">รหัสผ่าน
         <small>ใช้เฉพาะ Admin และหัวหน้างาน หากแก้ไขบัญชีเดิมและไม่เปลี่ยนรหัส ให้เว้นว่าง</small>
-        <input id="editPassword" type="password" autocomplete="new-password">
-      </label>
-      <label class="full">สิทธิ์
+<input autocomplete="new-password" id="editPassword" type="password"/>
+</label>
+<label class="full">สิทธิ์
         <select id="editRoleCode">
-          <option value="FIELD_USER">ผู้ปฏิบัติงาน</option>
-          <option value="REVIEWER">หัวหน้างาน</option>
-          <option value="ADMIN">Admin</option>
-          <option value="FINANCE">การเงิน</option>
-          <option value="EXECUTIVE">ผู้บริหาร</option>
-        </select>
-      </label>
-    </div>
-    <div class="dialog-actions">
-      <button id="cancelUserBtn" class="btn tertiary" type="button">ยกเลิก</button>
-      <button id="saveUserBtn" class="btn primary" type="button">บันทึกผู้ใช้งาน</button>
-    </div>
-  </form>
+<option value="FIELD_USER">ผู้ปฏิบัติงาน</option>
+<option value="REVIEWER">หัวหน้างาน</option>
+<option value="ADMIN">Admin</option>
+<option value="FINANCE">การเงิน</option>
+<option value="EXECUTIVE">ผู้บริหาร</option>
+</select>
+</label>
+</div>
+<div class="dialog-actions">
+<button class="btn tertiary" id="cancelUserBtn" type="button">ยกเลิก</button>
+<button class="btn primary" id="saveUserBtn" type="button">บันทึกผู้ใช้งาน</button>
+</div>
+</form>
 </dialog>
-
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="assets/js/config.js"></script>
-<script src="assets/js/ui-alerts.js"></script>
-<script src="assets/js/api.js"></script>
-<script src="assets/js/admin-users.js"></script>
+<script src="assets/js/config.js?v=R05S01"></script>
+<script src="assets/js/ui-alerts.js?v=R05S01"></script>
+<script src="assets/js/api.js?v=R05S01"></script>
+<script src="assets/js/admin-users.js?v=R05S01"></script>
 </body>
 </html>

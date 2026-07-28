@@ -1,26 +1,27 @@
-<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RetailInsight — นำเข้าข้อมูลร้าน</title><link rel="stylesheet" href="assets/css/admin-console.css"></head><body>
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/>
+<title>RetailInsight — นำเข้าข้อมูลร้าน</title><link href="assets/css/admin-console.css?v=R05S01" rel="stylesheet"/></head><body>
 <header class="admin-top">
 <button class="menu-btn" id="menuBtn" type="button">☰</button>
 <div class="admin-brand"><span class="brand-symbol">RI</span><span class="brand-copy"><b>RetailInsight</b><small>Administration</small></span></div>
-<div class="top-spacer"></div><div class="admin-account"><span class="online-dot"></span><span>Admin</span></div>
-</header><div class="admin-layout"><aside class="side" id="side"><div class="nav-section">จัดการระบบ</div><a href="admin.html"><span class="nav-icon">H</span><span>หน้าหลัก Admin</span></a><a href="admin-users.html"><span class="nav-icon">U</span><span>ผู้ใช้งานและ QR</span></a><a href="admin-user-month-import.html"><span class="nav-icon">M</span><span>งานรายบุคคล</span></a><a href="admin-import.html" class="active"><span class="nav-icon">S</span><span>ข้อมูลร้าน</span></a><a href="admin-field-visibility.html"><span class="nav-icon">V</span><span>การมองเห็นข้อมูล</span></a><a href="admin-database-health.html"><span class="nav-icon">D</span><span>สถานะฐานข้อมูล</span></a><div class="nav-section nav-section-bottom">บัญชี</div><a href="admin-login.html"><span class="nav-icon">↪</span><span>ออกจากระบบ</span></a></aside><main class="content">
+<div class="top-spacer"></div><div class="admin-account"><span class="online-dot"></span><span>Admin</span><small class="build-badge" title="เวอร์ชันหน้าจอผู้ดูแลระบบ">R05-S01</small></div>
+</header><div class="admin-layout"><aside class="side" id="side"><div class="nav-section">จัดการระบบ</div><a href="admin.html"><span class="nav-icon">H</span><span>หน้าหลัก Admin</span></a><a href="admin-users.html"><span class="nav-icon">U</span><span>ผู้ใช้งานและ QR</span></a><a href="admin-user-month-import.html"><span class="nav-icon">M</span><span>งานรายบุคคล</span></a><a class="active" href="admin-import.html"><span class="nav-icon">S</span><span>ข้อมูลร้านและแผนงาน</span></a><a href="admin-pos-management.html"><span class="nav-icon">P</span><span>จัดการเครื่อง POS</span></a><a href="admin-receipt-policies.html"><span class="nav-icon">R</span><span>นโยบายการอ่านบิล</span></a><a href="admin-pos-reasons.html"><span class="nav-icon">E</span><span>เหตุผลกรณี POS ไม่มีข้อมูล</span></a><a href="admin-field-visibility.html"><span class="nav-icon">V</span><span>การมองเห็นข้อมูล</span></a><a href="admin-database-health.html"><span class="nav-icon">D</span><span>สถานะฐานข้อมูล</span></a><div class="nav-section nav-section-bottom">บัญชี</div><a href="admin-login.html"><span class="nav-icon">↪</span><span>ออกจากระบบ</span></a></aside><main class="content">
 <div class="page-head"><div><div class="eyebrow">STORE MASTER IMPORT</div><h1>นำเข้าข้อมูลร้านและแผนงาน</h1><p>รองรับ Excel และ CSV พร้อมตรวจข้อมูลก่อนนำเข้า D1</p></div>
 <div class="page-actions"><a class="back-link" href="admin.html">← หน้าหลัก Admin</a><a class="back-link" href="admin-user-month-import.html">งานรายบุคคล</a></div></div>
 <div class="admin-page-grid">
 <section class="admin-section"><div class="section-head"><div class="section-title-wrap"><span class="section-number">1</span><div><h2>เลือกไฟล์และค่าตั้งต้น</h2><p>แถวแรกของไฟล์ต้องเป็นชื่อคอลัมน์ ระบบจะยังไม่บันทึกจนกว่าจะกดยืนยัน</p></div></div></div>
-<div class="section-body"><div class="file-drop"><input id="fileInput" type="file" accept=".xlsx,.xls,.csv"></div>
+<div class="section-body"><div class="file-drop"><input accept=".xlsx,.xls,.csv" id="fileInput" type="file"/></div>
 <div class="admin-form-grid">
-<label>รหัสรอบงาน<input id="roundId" placeholder="เช่น 2026-07-R01"></label>
-<label class="wide">ชื่อรอบงาน<input id="roundName"></label>
-<label>วันที่เริ่มต้น<input id="workDate" type="date"></label>
-<label>ช่องรูปบิล<input id="receiptSlots" type="number" value="3" min="0" max="30"></label>
-<label>ช่องรูปร้าน<input id="storeSlots" type="number" value="5" min="0" max="30"></label>
-<label id="legacyTokenWrap" style="display:none">Admin Bootstrap Token<input id="adminTokenImport" type="password"></label>
+<label>รหัสรอบงาน<input id="roundId" placeholder="เช่น 2026-07-R01"/></label>
+<label class="wide">ชื่อรอบงาน<input id="roundName"/></label>
+<label>วันที่เริ่มต้น<input id="workDate" type="date"/></label>
+<label>ช่องรูปบิล<input id="receiptSlots" max="30" min="0" type="number" value="3"/></label>
+<label>ช่องรูปร้าน<input id="storeSlots" max="30" min="0" type="number" value="5"/></label>
+<label id="legacyTokenWrap" style="display:none">Admin Bootstrap Token<input id="adminTokenImport" type="password"/></label>
 </div>
-<div class="form-actions"><button id="previewBtn" class="btn primary">ตรวจสอบไฟล์</button><button id="commitBtn" class="btn secondary" disabled>ยืนยันนำเข้า</button></div>
-<div id="importStatus" class="inline-status">ยังไม่ได้เลือกไฟล์</div></div></section>
+<div class="form-actions"><button class="btn primary" id="previewBtn">ตรวจสอบไฟล์</button><button class="btn secondary" disabled="" id="commitBtn">ยืนยันนำเข้า</button></div>
+<div class="inline-status" id="importStatus">ยังไม่ได้เลือกไฟล์</div></div></section>
 <section class="admin-section"><div class="section-head"><div class="section-title-wrap"><span class="section-number">2</span><div><h2>ผลตรวจสอบก่อนนำเข้า</h2><p>แถวสีแดงต้องแก้ไขก่อน ส่วนแถวที่ผ่านจึงจะนำเข้าได้อย่างปลอดภัย</p></div></div></div>
-<div class="section-body"><div id="summary" class="preview-summary"></div><div class="data-table-wrap"><table class="data-table"><thead><tr><th>แถว</th><th>แบรนด์</th><th>รหัสร้าน</th><th>ชื่อร้าน</th><th>POS</th><th>รูปบิล</th><th>รูปร้าน</th><th>วันงาน</th><th>ผู้ปฏิบัติงาน</th><th>ผลตรวจ</th></tr></thead><tbody id="previewBody"></tbody></table></div></div></section>
+<div class="section-body"><div class="preview-summary" id="summary"></div><div class="data-table-wrap"><table class="data-table"><thead><tr><th>แถว</th><th>แบรนด์</th><th>รหัสร้าน</th><th>ชื่อร้าน</th><th>POS</th><th>รูปบิล</th><th>รูปร้าน</th><th>วันงาน</th><th>ผู้ปฏิบัติงาน</th><th>ผลตรวจ</th></tr></thead><tbody id="previewBody"></tbody></table></div></div></section>
 </div></main></div><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="assets/js/config.js"></script><script src="assets/js/api.js"></script><script src="assets/js/ui-alerts.js"></script><script src="assets/js/admin-import.js"></script></body></html>
+<script src="assets/js/config.js?v=R05S01"></script><script src="assets/js/api.js?v=R05S01"></script><script src="assets/js/ui-alerts.js?v=R05S01"></script><script src="assets/js/admin-import.js?v=R05S01"></script></body></html>

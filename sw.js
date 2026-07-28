@@ -1,5 +1,5 @@
-const CACHE='retailinsight-field-v10a';
-const ASSETS=['./','login.html','field.html','manifest.json','assets/css/field-workspace.css','assets/css/login-retailinsight.css','assets/js/config.js','assets/js/api.js','assets/js/ui-alerts.js','assets/js/date-th.js','assets/js/local-draft-db.js','assets/js/field-workspace.js','assets/js/login.js'];
-self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
-self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
-self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;const u=new URL(e.request.url);if(u.pathname.includes('/api/'))return;e.respondWith(caches.match(e.request).then(cached=>cached||fetch(e.request).then(r=>{const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));return r}).catch(()=>caches.match('field.html'))))});
+const CACHE='retailinsight-r05-s01';
+const ASSETS=['./','login.html','field.html','admin.html','assets/css/app.css','assets/css/admin-console.css','assets/js/config.js','assets/js/api.js','assets/js/login.js'];
+self.addEventListener('install',event=>{self.skipWaiting();event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)));});
+self.addEventListener('activate',event=>{event.waitUntil(Promise.all([caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key)))),self.clients.claim()]));});
+self.addEventListener('fetch',event=>{if(event.request.method!=='GET')return;const url=new URL(event.request.url);if(url.origin===location.origin&&(url.pathname.endsWith('.html')||url.pathname.includes('/assets/'))){event.respondWith(fetch(event.request,{cache:'no-store'}).then(response=>{const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(event.request,copy));return response;}).catch(()=>caches.match(event.request)));return;}event.respondWith(fetch(event.request).catch(()=>caches.match(event.request)));});
