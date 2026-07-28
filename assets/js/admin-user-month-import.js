@@ -6,7 +6,23 @@ function setStatus(id,text,type=''){const e=$(id);e.textContent=text;e.className
 function normalizeName(v){return String(v||'').trim().replace(/[\\/:*?"<>|]/g,'_').replace(/\s+/g,'_').slice(0,80)}
 function monthThai(m){if(!/^\d{4}-\d{2}$/.test(m))return m;const [y,mo]=m.split('-').map(Number);return new Intl.DateTimeFormat('th-TH',{month:'long',year:'numeric',timeZone:'Asia/Bangkok'}).format(new Date(Date.UTC(y,mo-1,1)))}
 async function guard(){const me=await Api.verifySession({force:true});const role=me?.user?.role_code||me?.user?.roleCode;if(role!=='ADMIN')throw new Error('หน้านี้ใช้ได้เฉพาะผู้ดูแลระบบ');$('adminName').textContent=me.user.display_name||me.user.displayName||'Admin'}
-async function loadOptions(){setStatus('generateStatus','กำลังโหลดหัวหน้าและผู้ปฏิบัติงาน…');options=await Api.request('/api/admin/workplan-template/options');$('supervisor').innerHTML='<option value="">เลือกหัวหน้างาน</option>'+options.supervisors.map(x=>`<option value="${esc(x.id)}">${esc(x.employeeCode||'-')} — ${esc(x.displayName)}</option>`).join('');setStatus('generateStatus','พร้อมสร้างเท็มเพลต','ok')}
+async function loadOptions(){
+ setStatus('generateStatus','กำลังโหลดหัวหน้าและผู้ปฏิบัติงาน…');
+ try{
+  options=await Api.request('/api/admin/workplan-template/options');
+  $('supervisor').innerHTML='<option value="">เลือกหัวหน้างาน</option>'+options.supervisors.map(x=>`<option value="${esc(x.id)}">${esc(x.employeeCode||'-')} — ${esc(x.displayName)}</option>`).join('');
+  if(!options.supervisors.length)throw new Error('ยังไม่มีบัญชีหัวหน้างานที่เปิดใช้งาน');
+  if(!options.workers.length)throw new Error('ยังไม่มีผู้ปฏิบัติงานที่เปิดใช้งาน');
+  $('generateBtn').disabled=false;
+  setStatus('generateStatus',`พร้อมสร้างเท็มเพลต · หัวหน้า ${options.supervisors.length} คน · ผู้ปฏิบัติงาน ${options.workers.length} คน`,'ok');
+ }catch(e){
+  $('generateBtn').disabled=true;
+  const detail=`${e.status||''} ${e.code||''} ${e.message||''}`;
+  const msg=/404|NOT_FOUND/i.test(detail)?'Worker ยังไม่ใช่รุ่น Template Center กรุณา Deploy worker/src/index.js จาก ZIP รอบแก้ไขนี้':`โหลดข้อมูลไม่สำเร็จ: ${e.message||'ไม่ทราบสาเหตุ'}`;
+  setStatus('generateStatus',msg,'error');
+  throw new Error(msg);
+ }
+}
 function visibleWorkers(){const sid=$('supervisor').value,q=$('workerSearch').value.trim().toLowerCase();return options.workers.filter(w=>(!w.supervisorId||w.supervisorId===sid)&&(!q||`${w.employeeCode} ${w.displayName}`.toLowerCase().includes(q)))}
 function renderWorkers(){const sid=$('supervisor').value,rows=sid?visibleWorkers():[];$('workerPicker').innerHTML=!sid?'<div class="feature-state">กรุณาเลือกหัวหน้างาน</div>':rows.length?rows.map(w=>`<label class="worker-choice"><input type="checkbox" data-id="${esc(w.id)}" ${selected.has(w.id)?'checked':''}><span><b>${esc(w.employeeCode||'-')} — ${esc(w.displayName)}</b><small>${w.supervisorId===sid?'อยู่ภายใต้หัวหน้าคนนี้':'ยังไม่ผูกหัวหน้า ระบบจะผูกเมื่อสร้างเท็มเพลต'}</small></span></label>`).join(''):'<div class="feature-state">ไม่พบผู้ปฏิบัติงาน</div>';updateSummary()}
 function updateSummary(){const m=$('workMonth').value,s=options.supervisors.find(x=>x.id===$('supervisor').value);$('selectedCount').textContent=`เลือก ${selected.size} คน`;$('templateSummary').innerHTML=`<b>${m?monthThai(m):'ยังไม่เลือกเดือน'} · ${s?esc(s.displayName):'ยังไม่เลือกหัวหน้า'}</b><span>จะสร้าง ${selected.size} ไฟล์ Excel แยกรายคน${selected.size>MAX_WORKERS?' · เกินขีดจำกัด':''}</span>`}
