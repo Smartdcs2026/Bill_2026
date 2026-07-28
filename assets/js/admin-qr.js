@@ -1,11 +1,55 @@
-(function(){
-  const status=document.querySelector('#adminStatus'),sharedStatus=document.querySelector('#sharedCodeStatus'),canvas=document.querySelector('#qrCanvas');let currentPayload='';
-  const setStatus=(el,t,c='')=>{el.textContent=t;el.className=`status ${c}`};
-  const adminToken=()=>document.querySelector('#adminToken').value.trim();
-  function normalizeCode(input){input.value=input.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,10)}
-  async function setSharedCode(){const input=document.querySelector('#sharedCodeAdmin');normalizeCode(input);if(!/^(?=.*[A-Z])(?=.*\d)[A-Z0-9]{10}$/.test(input.value))return setStatus(sharedStatus,'รหัสต้องมี 10 หลัก และมีทั้งตัวอักษรอังกฤษกับตัวเลข','error');if(!adminToken())return setStatus(sharedStatus,'กรุณากรอก Admin Token','error');try{const d=await Api.request('/api/admin/shared-code/set',{method:'POST',headers:{'X-Admin-Bootstrap-Token':adminToken()},body:JSON.stringify({sharedCode:input.value})});input.value='';setStatus(sharedStatus,d.message,'ok')}catch(e){setStatus(sharedStatus,e.message,'error')}}
-  async function createQr(){const userId=document.querySelector('#userId').value.trim(),expiresDays=Number(document.querySelector('#expiresDays').value||30),revokeExisting=document.querySelector('#revokeExisting').checked;if(!userId||!adminToken())return setStatus(status,'กรุณากรอก User ID และ Admin Token','error');try{const data=await Api.request('/api/admin/qr/create',{method:'POST',headers:{'X-Admin-Bootstrap-Token':adminToken()},body:JSON.stringify({userId,expiresDays,revokeExisting})});currentPayload=data.qrPayload;await QRCode.toCanvas(canvas,currentPayload,{width:260,margin:2,errorCorrectionLevel:'M'});document.querySelector('#credentialId').textContent=data.credentialId;document.querySelector('#qrUserName').textContent=`${data.user.displayName}${data.user.employeeCode?` (${data.user.employeeCode})`:''}`;setStatus(status,'Generate QR สำเร็จ','ok')}catch(e){setStatus(status,e.message,'error')}}
-  function download(){if(!currentPayload)return setStatus(status,'ยังไม่มี QR ให้ดาวน์โหลด','error');const name=(document.querySelector('#qrUserName').textContent||'FIELD_USER').replace(/\s+/g,'_');const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download=`USER_QR_${name}.png`;a.click()}
-  async function revoke(){const credentialId=document.querySelector('#credentialId').textContent.trim();if(!credentialId)return setStatus(status,'ยังไม่มี Credential ID','error');try{await Api.request('/api/admin/qr/revoke',{method:'POST',headers:{'X-Admin-Bootstrap-Token':adminToken()},body:JSON.stringify({credentialId})});setStatus(status,'ยกเลิก QR แล้ว','ok')}catch(e){setStatus(status,e.message,'error')}}
-  document.querySelector('#sharedCodeAdmin').addEventListener('input',e=>normalizeCode(e.target));document.querySelector('#setSharedCodeBtn').addEventListener('click',setSharedCode);document.querySelector('#createQrBtn').addEventListener('click',createQr);document.querySelector('#downloadQrBtn').addEventListener('click',download);document.querySelector('#revokeQrBtn').addEventListener('click',revoke);
+(()=>{
+const $=id=>document.getElementById(id);
+const status=$('sharedCodeStatus');
+function setStatus(text,type=''){
+ status.textContent=text;
+ status.className=`inline-status ${type}`;
+}
+function normalize(input){
+ input.value=input.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,10);
+}
+async function guard(){
+ try{
+  const d=await Api.request('/api/staff/me');
+  if(d.user.role_code!=='ADMIN')throw new Error('ไม่มีสิทธิ์ Admin');
+ }catch(e){
+  await UI.error('กรุณาเข้าสู่ระบบ Admin',e.message);
+  location.href='admin-login.html';
+  throw e;
+ }
+}
+async function save(){
+ const input=$('sharedCodeAdmin');
+ normalize(input);
+ if(!/^(?=.*[A-Z])(?=.*\d)[A-Z0-9]{10}$/.test(input.value)){
+  await UI.error('รหัสไม่ถูกต้อง','ต้องมี 10 หลัก และมีทั้งตัวอักษรอังกฤษกับตัวเลข');
+  input.focus();return;
+ }
+ const confirm=await UI.confirm(
+  'เปลี่ยนรหัสผ่านประจำรอบ?',
+  'รหัสเดิมจะใช้เข้าสู่ระบบไม่ได้ทันที แต่ QR ประจำตัวของทุกคนยังคงเดิม',
+  'ยืนยันเปลี่ยนรหัส'
+ );
+ if(!confirm.isConfirmed)return;
+ try{
+  UI.loading('กำลังบันทึกรหัสประจำรอบ…');
+  const d=await Api.request('/api/admin/shared-code/set',{
+   method:'POST',body:JSON.stringify({sharedCode:input.value})
+  });
+  UI.close();input.value='';
+  setStatus(d.message||'กำหนดรหัสประจำรอบเรียบร้อยแล้ว','ok');
+  await UI.success('บันทึกสำเร็จ','QR ประจำตัวเดิมยังใช้งานได้');
+ }catch(e){
+  UI.close();setStatus(e.message,'error');
+  UI.error('บันทึกไม่สำเร็จ',e.message);
+ }
+}
+$('sharedCodeAdmin').addEventListener('input',e=>normalize(e.target));
+$('sharedCodeAdmin').addEventListener('keydown',e=>{if(e.key==='Enter')save()});
+$('setSharedCodeBtn').onclick=save;
+$('menuBtn').onclick=()=>$('side').classList.toggle('open');
+document.addEventListener('click',e=>{
+ if(innerWidth<=850&&!e.target.closest('#side')&&!e.target.closest('#menuBtn'))$('side').classList.remove('open');
+});
+guard();
 })();
