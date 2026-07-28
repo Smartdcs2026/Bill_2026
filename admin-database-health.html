@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RetailInsight — Database Health</title>
+<link rel="stylesheet" href="assets/css/admin-console.css">
+<link rel="stylesheet" href="assets/css/database-health.css">
+</head>
+<body>
+<header class="admin-top">
+ <button class="menu-btn" id="menuBtn">☰</button>
+ <div class="admin-brand"><b>RetailInsight</b><span>Admin Console</span></div>
+ <div class="top-spacer"></div><span class="admin-role">ADMIN</span>
+</header>
+<div class="admin-layout">
+<aside class="side" id="side">
+ <a href="admin-users.html">ผู้ใช้งานและ QR</a>
+ <a href="admin-user-month-import.html">งานรายบุคคล</a>
+ <a href="admin-import.html">ข้อมูลร้าน</a>
+ <a href="admin-field-visibility.html">การมองเห็นข้อมูล</a>
+ <a href="admin-database-health.html" class="active">สถานะฐานข้อมูล</a>
+ <a href="admin-login.html">ออกจากระบบ</a>
+</aside>
+<main class="content">
+ <div class="page-head">
+  <div><h1>สถานะฐานข้อมูล</h1><p>ตรวจว่า Worker และ Cloudflare D1 ใช้ Schema ชุดเดียวกัน</p></div>
+  <button id="checkBtn" class="btn primary">ตรวจสอบอีกครั้ง</button>
+ </div>
+ <section class="metric-grid">
+  <div class="metric"><span>สถานะ</span><b id="healthState">-</b></div>
+  <div class="metric"><span>ตาราง</span><b id="tableCount">-</b></div>
+  <div class="metric"><span>ดัชนี</span><b id="indexCount">-</b></div>
+  <div class="metric"><span>ตรวจล่าสุด</span><b id="checkedAt" class="small-value">-</b></div>
+ </section>
+ <section class="panel health-panel">
+  <div id="summary" class="health-summary">กำลังตรวจสอบ…</div>
+  <div class="health-grid">
+   <div><h3>ตารางที่ขาด</h3><div id="missingTables" class="result-box"></div></div>
+   <div><h3>คอลัมน์ที่ขาด</h3><div id="missingColumns" class="result-box"></div></div>
+   <div><h3>ดัชนีที่ขาด</h3><div id="missingIndexes" class="result-box"></div></div>
+   <div><h3>ประวัติ Migration</h3><div id="migrations" class="result-box"></div></div>
+  </div>
+ </section>
+</main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/ui-alerts.js"></script>
+<script src="assets/js/admin-database-health.js"></script>
+</body></html>
