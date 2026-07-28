@@ -556,3 +556,8 @@ dialog{border-radius:14px;width:min(550px,calc(100% - 20px))}
  .monthly-contract-grid .wide{grid-column:1}
  .worker-preview-dialog{width:calc(100% - 10px)}
 }
+
+
+/* ROUND 04 REVISION 10A.8 — POS reasons admin */
+.reason-admin-list{display:grid;gap:8px;margin-top:12px}.reason-admin-row{display:grid;grid-template-columns:44px minmax(0,1fr) 64px 72px 72px;gap:8px;align-items:center;border:1px solid #dce3ed;border-radius:10px;padding:9px;background:#fff}.reason-order{width:38px;height:32px;border-radius:8px;background:#edf4ff;color:#1556ad;display:grid;place-items:center;font-weight:900}.reason-copy b,.reason-copy small{display:block}.reason-copy b{font-size:13px}.reason-copy small{font-size:10px;color:#667085;margin-top:3px}.reason-state{font-size:10px;font-weight:900;text-align:center;border-radius:99px;padding:5px}.reason-state.on{background:#eaf8ef;color:#157347}.reason-state.off{background:#f2f4f7;color:#667085}.admin-modal{position:fixed;inset:0;background:#10182880;z-index:200;display:grid;place-items:center;padding:16px}.admin-modal.hidden{display:none}.admin-modal-card{width:min(620px,100%);background:#fff;border-radius:14px;padding:16px;box-shadow:0 25px 70px #10182845}.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.modal-head h2{margin:0}.modal-head button{width:36px;height:36px;border:0;border-radius:8px;font-size:22px}.check-line{display:flex!important;align-items:center;gap:8px}.check-line input{width:auto!important}.reason-admin-row .btn:disabled{opacity:.4}
+@media(max-width:720px){.reason-admin-row{grid-template-columns:40px minmax(0,1fr) 54px}.reason-admin-row .btn{grid-column:auto}.reason-admin-row button:first-of-type{grid-column:2}.reason-admin-row button:last-child{grid-column:3}}
