@@ -21,6 +21,8 @@
  const getImage=id=>request('images','readonly',s=>s.get(id)).then(v=>v||null);
  const updateImage=(id,patch)=>getImage(id).then(v=>v?saveImage({...v,...patch,id}):null);
  const deleteImage=id=>request('images','readwrite',s=>s.delete(id));
+ const removeQueueByImage=async imageId=>{const rows=await listQueue();let removed=0;for(const q of rows.filter(x=>String(x.imageId||x.payload?.imageId||'')===String(imageId))){await removeQueue(q.id);removed++}return removed};
+ const deleteImageSafely=async id=>{const image=await getImage(id);if(!image)return {deleted:false,removedQueue:0};const removedQueue=await removeQueueByImage(id);await deleteImage(id);return {deleted:true,removedQueue,assignmentId:image.assignmentId}};
  const saveAssignments=(items,userKey='default')=>request('assignments','readwrite',s=>s.put({key:userKey,items,updatedAt:now()}));
  const getAssignments=(userKey='default')=>request('assignments','readonly',s=>s.get(userKey)).then(v=>v||null);
  const saveLocation=loc=>request('locations','readwrite',s=>s.put({...loc,state:loc.state||'QUEUED',updatedAt:now()}));
@@ -45,13 +47,17 @@
  }
  function queueSignature(q){const p=q?.payload||{};return [q?.type||'',q?.assignmentId||'',p.imageId||p.locationId||p.clientSubmissionId||p.id||q?.referenceId||''].join('::')}
  async function repairQueue(){
-  const rows=await listQueue(),active=rows.filter(x=>x.state!=='DONE'),seen=new Map();let removedDuplicates=0,removedDone=0;
+  const rows=await listQueue(),active=rows.filter(x=>x.state!=='DONE'),seen=new Map();let removedDuplicates=0,removedDone=0,removedMissingImages=0;
   for(const row of active.sort((a,b)=>String(b.updatedAt||b.createdAt||'').localeCompare(String(a.updatedAt||a.createdAt||'')))){
+   if(row.type==='IMAGE_UPLOAD'){
+    const imageId=row.imageId||row.payload?.imageId;
+    if(!imageId||!(await getImage(imageId))){await removeQueue(row.id);removedMissingImages++;continue}
+   }
    const sig=queueSignature(row);if(!sig.endsWith('::')&&seen.has(sig)){await removeQueue(row.id);removedDuplicates++}else seen.set(sig,row.id);
   }
   const cutoff=Date.now()-7*864e5;
   for(const row of rows.filter(x=>x.state==='DONE')){const t=new Date(row.updatedAt||row.createdAt||0).getTime();if(t&&t<cutoff){await removeQueue(row.id);removedDone++}}
-  return {removedDuplicates,removedDone,activeAfter:(await listQueue()).filter(x=>x.state!=='DONE').length};
+  return {removedDuplicates,removedDone,removedMissingImages,activeAfter:(await listQueue()).filter(x=>x.state!=='DONE').length};
  }
  async function localCounts(){const [drafts,images,locations,queue]=await Promise.all(['drafts','images','locations','queue'].map(allFrom));return{drafts:drafts.length,images:images.length,locations:locations.length,queue:queue.filter(x=>x.state!=='DONE').length}}
  function validBackup(snapshot){return snapshot&&snapshot.format==='RetailInsightLocalBackup'&&Number(snapshot.version)===1&&snapshot.data&&typeof snapshot.data==='object'}
@@ -78,5 +84,5 @@
   }
   await setMeta('last_restore_at',now());return result;
  }
- window.LocalDraftDB={getDraft,saveDraft,deleteDraft,listDrafts,saveImage,getImage,updateImage,listImages,listPendingImages,deleteImage,saveAssignments,getAssignments,saveLocation,getLocation,updateLocation,listLocations,enqueue,getQueue,updateQueue,listQueue,listFailedQueue,resetFailedQueue,removeQueue,setMeta,getMeta,storageStatus,requestPersistence,exportSnapshot,importSnapshot,repairQueue,localCounts};
+ window.LocalDraftDB={getDraft,saveDraft,deleteDraft,listDrafts,saveImage,getImage,updateImage,listImages,listPendingImages,deleteImage,deleteImageSafely,removeQueueByImage,saveAssignments,getAssignments,saveLocation,getLocation,updateLocation,listLocations,enqueue,getQueue,updateQueue,listQueue,listFailedQueue,resetFailedQueue,removeQueue,setMeta,getMeta,storageStatus,requestPersistence,exportSnapshot,importSnapshot,repairQueue,localCounts};
 })();
