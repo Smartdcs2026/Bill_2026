@@ -420,3 +420,139 @@ dialog{border-radius:14px;width:min(550px,calc(100% - 20px))}
  .dashboard-card b{font-size:11px}
  .dashboard-card p{font-size:8px}
 }
+
+
+/* ROUND 04 REVISION 10 — MONTHLY FILE CONTRACT & WORKER PREVIEW */
+.monthly-contract-grid{
+ grid-template-columns:repeat(4,minmax(0,1fr));
+}
+.monthly-contract-grid .wide{grid-column:span 2}
+.file-contract-note{
+ margin:10px 0 8px;padding:9px 11px;border:1px solid #cfe0f7;
+ background:#f6f9fe;border-radius:9px;display:grid;gap:3px
+}
+.file-contract-note b{font-size:10px;color:#164f9d}
+.file-contract-note span{font-size:9px;color:#526176;line-height:1.55}
+.contract-drop{display:grid;gap:4px}
+.contract-drop small{font-size:8px;color:#667085}
+.preview-summary .success{background:#eaf8ef;color:#157347}
+.preview-summary .danger{background:#fff0ef;color:#b42318}
+.preview-summary .warning{background:#fff7dc;color:#8a6100}
+.contract-warnings{
+ margin-bottom:8px;padding:8px 10px;border-radius:8px;
+ background:#fff7dc;color:#765a00;display:grid;gap:3px;font-size:9px
+}
+.contract-table-wrap{max-height:48vh}
+.contract-table{min-width:1080px}
+.row-invalid{background:#fff8f7}
+.row-valid{background:#fff}
+.validation-error{display:block;color:#b42318;font-size:9px;font-weight:700}
+.validation-ok{display:block;color:#157347;font-size:9px;font-weight:800}
+.validation-warning{display:block;color:#8a6100;font-size:8px;margin-top:2px}
+
+.worker-preview-dialog{
+ border:0;padding:0;background:transparent;width:min(430px,calc(100% - 20px));
+ max-height:92vh
+}
+.worker-preview-dialog::backdrop{background:#101828b3}
+.worker-preview-shell{
+ background:#eef2f6;border-radius:20px;overflow:hidden;
+ box-shadow:0 24px 70px #10182855;max-height:92vh
+}
+.worker-preview-head{
+ height:58px;background:#101828;color:#fff;padding:0 10px;
+ display:flex;align-items:center;justify-content:space-between
+}
+.worker-preview-head>div{display:flex;align-items:center;gap:8px}
+.worker-preview-logo{
+ width:34px;height:34px;border-radius:9px;background:#1673e6;
+ display:grid;place-items:center;font-size:11px;font-weight:900
+}
+.worker-preview-head b,.worker-preview-head small{display:block}
+.worker-preview-head b{font-size:15px}
+.worker-preview-head small{font-size:8px;color:#d0d5dd;margin-top:2px}
+.worker-preview-head button{
+ width:34px;height:34px;border:0;border-radius:8px;
+ background:#ffffff14;color:#fff;font-size:20px
+}
+.worker-preview-calendar{
+ background:#fff;border-bottom:1px solid #d9e1eb;
+ display:grid;grid-template-columns:36px 1fr 36px;align-items:center;
+ padding:7px 9px
+}
+.worker-preview-calendar button{
+ height:32px;border:1px solid #d9e1eb;background:#fff;border-radius:8px;
+ color:#1556ad;font-size:19px
+}
+.worker-preview-calendar div{text-align:center}
+.worker-preview-calendar small,.worker-preview-calendar b{display:block}
+.worker-preview-calendar small{font-size:7px;color:#667085}
+.worker-preview-calendar b{font-size:11px;margin-top:2px}
+.worker-preview-summary{
+ display:grid;grid-template-columns:repeat(3,1fr);gap:5px;padding:7px;
+ background:#f8fafc
+}
+.worker-preview-summary span{
+ background:#fff;border:1px solid #d9e1eb;border-radius:8px;
+ padding:6px;text-align:center
+}
+.worker-preview-summary b,.worker-preview-summary small{display:block}
+.worker-preview-summary b{font-size:14px}
+.worker-preview-summary small{font-size:7px;color:#667085}
+.worker-preview-list{
+ padding:7px;display:grid;gap:5px;max-height:65vh;overflow:auto
+}
+.worker-preview-store{
+ background:#fff;border:1px solid #d9e1eb;border-radius:10px;overflow:hidden
+}
+.worker-preview-row{
+ width:100%;border:0;background:#fff;padding:0;
+ display:grid;grid-template-columns:45px minmax(0,1fr) 18px;text-align:left
+}
+.worker-preview-brand{
+ min-height:57px;background:linear-gradient(#1d7de8,#1265cd);
+ color:#fff;display:grid;place-items:center;font-size:10px;font-weight:900
+}
+.worker-preview-copy{padding:7px 8px;min-width:0;align-self:center}
+.worker-preview-copy b,.worker-preview-copy small{display:block}
+.worker-preview-copy b{
+ font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.worker-preview-copy small{
+ font-size:7px;color:#667085;margin-top:3px;
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.worker-preview-chevron{align-self:center;color:#7b8798;font-size:10px}
+.worker-preview-expanded{
+ border-top:1px solid #edf1f5;background:#fbfdff;padding:6px
+}
+.worker-preview-pos{display:grid;gap:3px}
+.worker-preview-pos span{
+ display:grid;grid-template-columns:36px repeat(3,1fr);gap:3px;
+ background:#fff;border:1px solid #e4e9f0;border-radius:6px;padding:4px
+}
+.worker-preview-pos b{
+ align-self:center;text-align:center;color:#1769dc;font-size:7px
+}
+.worker-preview-pos i{
+ font-style:normal;border:1px solid #d7dee8;border-radius:5px;
+ color:#98a2b3;font-size:6px;padding:6px 3px;text-align:center
+}
+.worker-preview-evidence{
+ display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:5px
+}
+.worker-preview-evidence span{
+ border:1px dashed #8eb0df;background:#f7faff;color:#174ea6;
+ border-radius:6px;padding:6px;text-align:center;font-size:7px
+}
+.worker-preview-empty{text-align:center;padding:30px 10px;color:#667085;font-size:10px}
+
+@media(max-width:1080px){
+ .monthly-contract-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .monthly-contract-grid .wide{grid-column:span 1}
+}
+@media(max-width:560px){
+ .monthly-contract-grid{grid-template-columns:1fr}
+ .monthly-contract-grid .wide{grid-column:1}
+ .worker-preview-dialog{width:calc(100% - 10px)}
+}
