@@ -3,49 +3,63 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>จัดการผู้ใช้งาน</title>
-<link rel="stylesheet" href="assets/css/app.css">
-<style>
-.wide{max-width:1180px}.toolbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
-.table-wrap{overflow:auto}.data-table{width:100%;border-collapse:collapse;min-width:900px}
-.data-table th,.data-table td{padding:9px;border-bottom:1px solid #e5e7eb;text-align:left}
-.badge{display:inline-flex;padding:4px 8px;border-radius:999px;background:#eef2ff}.off{background:#fee2e2}
-.actions-row{display:flex;gap:6px;flex-wrap:wrap}.compact{padding:7px 10px}
-dialog{border:0;border-radius:16px;width:min(560px,calc(100% - 24px));box-shadow:0 24px 80px #0004}
-dialog::backdrop{background:#0f172a88}.dialog-body{padding:18px}.dialog-head{display:flex;justify-content:space-between;align-items:center}
-</style>
+<title>RetailInsight — จัดการผู้ใช้งาน</title>
+<link rel="stylesheet" href="assets/css/admin-console.css">
 </head>
 <body>
-<header class="topbar"><strong>Admin — ผู้ใช้งานและ QR</strong><nav>
-<a href="admin.html" style="color:#fff">รหัสกลาง/QR</a> ·
-<a href="admin-import.html" style="color:#fff">นำเข้าร้าน</a>
-</nav></header>
-<main class="page wide">
-<section class="panel">
-<h2>จัดการผู้ใช้งาน</h2>
-<p class="muted">เพิ่ม แก้ไข เปิด–ปิดบัญชี และสร้าง QR รายบุคคล โดยไม่ต้องแก้ D1 ด้วยตนเอง</p>
-<div class="toolbar">
+<header class="admin-top">
+ <button class="menu-btn" id="menuBtn">☰</button>
+ <div class="admin-brand"><b>RetailInsight</b><span>Admin Console</span></div>
+ <div class="top-spacer"></div>
+ <span class="admin-role">ADMIN</span>
+</header>
+<div class="admin-layout">
+<aside class="side" id="side">
+ <a href="admin-users.html" class="active">ผู้ใช้งานและ QR</a>
+ <a href="admin-user-month-import.html">งานรายบุคคล</a>
+ <a href="admin-import.html">ข้อมูลร้าน</a>
+ <a href="admin-field-visibility.html">การมองเห็นข้อมูล</a>
+ <a href="admin-login.html">ออกจากระบบ</a>
+</aside>
+<main class="content">
+ <div class="page-head">
+  <div><h1>ผู้ใช้งานและ QR</h1><p>จัดการบัญชีและ QR ประจำตัวแบบถาวร</p></div>
+  <button id="newUserBtn" class="btn primary">+ เพิ่มผู้ใช้งาน</button>
+ </div>
 
-<label>ค้นหา<input id="userSearch" class="input" placeholder="ชื่อ รหัสพนักงาน หรือ username"></label>
-<label>สิทธิ์<select id="roleFilter" class="input"><option value="">ทั้งหมด</option><option value="FIELD_USER">ผู้ปฏิบัติงาน</option><option value="REVIEWER">หัวหน้างาน</option><option value="ADMIN">Admin</option><option value="FINANCE">การเงิน</option><option value="EXECUTIVE">ผู้บริหาร</option></select></label>
-<label>สถานะ<select id="statusFilter" class="input"><option value="ALL">ทั้งหมด</option><option value="ACTIVE">เปิดใช้งาน</option><option value="INACTIVE">ปิดใช้งาน</option></select></label>
-</div>
-<div class="actions"><button id="refreshUsersBtn" class="btn btn-secondary">โหลดข้อมูล</button><button id="newUserBtn" class="btn btn-primary">เพิ่มผู้ใช้งาน</button></div>
-<div id="usersStatus" class="status">พร้อมใช้งาน</div>
-<div class="table-wrap"><table class="data-table"><thead><tr><th>ชื่อ</th><th>Username</th><th>รหัสพนักงาน</th><th>สิทธิ์</th><th>สถานะ</th><th>QR ใช้งาน</th><th>จัดการ</th></tr></thead><tbody id="usersBody"></tbody></table></div>
-</section>
+ <section class="metric-grid">
+  <div class="metric"><span>ทั้งหมด</span><b id="metricTotal">0</b></div>
+  <div class="metric"><span>ผู้ปฏิบัติงาน</span><b id="metricField">0</b></div>
+  <div class="metric"><span>QR ใช้งาน</span><b id="metricQr">0</b></div>
+  <div class="metric"><span>ปิดบัญชี</span><b id="metricOff">0</b></div>
+ </section>
+
+ <section class="panel">
+  <div class="filters">
+   <label class="search">ค้นหา<input id="userSearch" placeholder="ชื่อ รหัสพนักงาน หรือ username"></label>
+   <label>สิทธิ์<select id="roleFilter"><option value="">ทั้งหมด</option><option value="FIELD_USER">ผู้ปฏิบัติงาน</option><option value="REVIEWER">หัวหน้างาน</option><option value="ADMIN">Admin</option><option value="FINANCE">การเงิน</option><option value="EXECUTIVE">ผู้บริหาร</option></select></label>
+   <label>สถานะ<select id="statusFilter"><option value="ALL">ทั้งหมด</option><option value="ACTIVE">เปิดใช้งาน</option><option value="INACTIVE">ปิดใช้งาน</option></select></label>
+   <button id="refreshUsersBtn" class="btn secondary">โหลดข้อมูล</button>
+  </div>
+  <div id="usersStatus" class="table-status">พร้อมใช้งาน</div>
+  <div class="table-wrap">
+   <table><thead><tr><th>ผู้ใช้งาน</th><th>รหัสพนักงาน</th><th>สิทธิ์</th><th>บัญชี</th><th>QR ประจำตัว</th><th>ใช้งานล่าสุด</th><th></th></tr></thead><tbody id="usersBody"></tbody></table>
+  </div>
+ </section>
 </main>
-<dialog id="userDialog"><div class="dialog-body"><div class="dialog-head"><h3 id="userDialogTitle">เพิ่มผู้ใช้งาน</h3><button id="closeUserDialog" class="btn btn-secondary compact">ปิด</button></div>
+</div>
+
+<dialog id="userDialog"><form method="dialog" class="dialog-card"><div class="dialog-head"><h3 id="userDialogTitle">เพิ่มผู้ใช้งาน</h3><button id="closeUserDialog" class="icon-btn">×</button></div>
 <input id="editUserId" type="hidden">
-<div class="stack">
-<label>ชื่อผู้ใช้งาน<input id="editDisplayName" class="input"></label>
-<label>Username (อังกฤษ/ตัวเลข)<input id="editUsername" class="input"></label>
-<label>รหัสพนักงาน<input id="editEmployeeCode" class="input"></label>
-<label>รหัสผ่าน (จำเป็นสำหรับ Admin/หัวหน้างาน และเว้นว่างได้เมื่อไม่เปลี่ยน)<input id="editPassword" class="input" type="password" autocomplete="new-password"></label><label>สิทธิ์<select id="editRoleCode" class="input"><option value="FIELD_USER">ผู้ปฏิบัติงาน</option><option value="REVIEWER">หัวหน้างาน</option><option value="ADMIN">Admin</option><option value="FINANCE">การเงิน</option><option value="EXECUTIVE">ผู้บริหาร</option></select></label>
-<button id="saveUserBtn" class="btn btn-primary">บันทึก</button>
-</div></div></dialog>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="assets/js/config.js"></script><script src="assets/js/ui-alerts.js"></script>
-<script src="assets/js/api.js"></script>
-<script src="assets/js/admin-users.js"></script>
+<div class="form-grid">
+<label class="full">ชื่อผู้ใช้งาน<input id="editDisplayName"></label>
+<label>Username<input id="editUsername"></label>
+<label>รหัสพนักงาน<input id="editEmployeeCode"></label>
+<label class="full">รหัสผ่าน <small>ใช้สำหรับ Admin/หัวหน้างาน</small><input id="editPassword" type="password" autocomplete="new-password"></label>
+<label class="full">สิทธิ์<select id="editRoleCode"><option value="FIELD_USER">ผู้ปฏิบัติงาน</option><option value="REVIEWER">หัวหน้างาน</option><option value="ADMIN">Admin</option><option value="FINANCE">การเงิน</option><option value="EXECUTIVE">ผู้บริหาร</option></select></label>
+</div><button id="saveUserBtn" class="btn primary full-btn">บันทึก</button></form></dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="assets/js/config.js"></script><script src="assets/js/ui-alerts.js"></script><script src="assets/js/api.js"></script><script src="assets/js/admin-users.js"></script>
 </body></html>

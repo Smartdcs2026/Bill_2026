@@ -1,4 +1,64 @@
-<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0d47a1"><title>เข้าสู่ระบบ</title><link rel="manifest" href="manifest.json"><link rel="stylesheet" href="assets/css/app.css"></head><body><main class="app-shell"><section class="card login-card"><div class="brand"><div class="brand-mark">▣</div><h1>เข้าสู่ระบบ</h1><p>ใช้ QR Code ที่ได้รับจากผู้ดูแลระบบ</p></div>
-<section id="qrStep"><div class="stack"><button id="scanBtn" class="btn btn-primary">สแกน QR Code</button><button id="chooseBtn" class="btn btn-secondary">เลือกรูป QR จากโทรศัพท์</button><input id="qrFile" type="file" accept="image/*" class="hidden"><div id="cameraBox" class="camera-box"><video id="cameraVideo" playsinline muted></video><div class="scan-frame"></div></div><button id="stopBtn" class="btn btn-danger hidden">ปิดกล้อง</button></div></section>
-<section id="codeStep" class="hidden"><div class="identity-card"><div class="avatar">👤</div><div><div class="muted small">พบผู้ใช้งาน</div><strong id="displayName">-</strong><div id="employeeCode" class="muted small"></div></div></div><label class="field-label" for="sharedCode">กรอกรหัสยืนยัน 10 หลัก</label><input id="sharedCode" class="input code-input" maxlength="10" autocomplete="one-time-code" autocapitalize="characters" spellcheck="false" inputmode="text" placeholder="ตัวอักษรอังกฤษและตัวเลข"><div class="stack top-gap"><button id="loginBtn" class="btn btn-primary">เข้าสู่ระบบ</button><button id="rescanBtn" class="btn btn-secondary">สแกน QR ใหม่</button></div></section>
-<div id="status" class="status">ยังไม่ได้สแกน</div><p class="muted small">QR เป็นข้อมูลส่วนบุคคล และรหัสยืนยันเป็นรหัสกลางที่ผู้ดูแลระบบกำหนด</p></section></main><script src="assets/js/config.js"></script><script src="assets/js/api.js"></script><script src="assets/js/login.js"></script><script>if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');</script></body></html>
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#174ea6">
+<title>RetailInsight — เข้าสู่ระบบผู้ปฏิบัติงาน</title>
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="assets/css/login-retailinsight.css">
+</head>
+<body>
+<main class="login-shell">
+<section class="login-card">
+<div class="brand">
+ <div class="brand-mark">RI</div>
+ <div><h1>RetailInsight</h1><p>เข้าสู่ระบบผู้ปฏิบัติงาน</p></div>
+</div>
+
+<div class="stepper">
+ <div class="step active" id="stepOne"><b>1</b><span>ยืนยัน QR ประจำตัว</span></div>
+ <div class="line"></div>
+ <div class="step" id="stepTwo"><b>2</b><span>รหัสผ่านประจำรอบ</span></div>
+</div>
+
+<section id="qrStep">
+ <div class="info-box">QR เป็นรหัสประจำตัวเฉพาะบุคคล ใช้งานต่อเนื่องและไม่มีวันหมดอายุ เว้นแต่ Admin ยกเลิกหรือออกใหม่</div>
+ <div class="stack">
+  <button id="scanBtn" class="btn primary">สแกน QR ด้วยกล้อง</button>
+  <button id="chooseBtn" class="btn secondary">เลือกรูป QR จากโทรศัพท์</button>
+  <input id="qrFile" type="file" accept="image/*" class="hidden">
+  <div id="cameraBox" class="camera-box">
+   <video id="cameraVideo" playsinline muted></video>
+   <canvas id="scanCanvas" class="hidden"></canvas>
+   <div class="scan-frame"></div>
+  </div>
+  <button id="stopBtn" class="btn danger hidden">ปิดกล้อง</button>
+ </div>
+</section>
+
+<section id="codeStep" class="hidden">
+ <div class="identity-card">
+  <div class="avatar">✓</div>
+  <div><small>ยืนยัน QR สำเร็จ</small><strong id="displayName">-</strong><span id="employeeCode"></span></div>
+ </div>
+ <label for="sharedCode">รหัสผ่านประจำรอบ 10 หลัก</label>
+ <input id="sharedCode" class="code-input" maxlength="10" autocomplete="one-time-code" autocapitalize="characters" spellcheck="false" placeholder="ตัวอักษรอังกฤษและตัวเลข">
+ <p class="hint">รหัสนี้ Admin สามารถเปลี่ยนตามรอบงานได้ โดยไม่ต้องออก QR ใหม่</p>
+ <div class="stack">
+  <button id="loginBtn" class="btn primary">เข้าสู่ระบบ</button>
+  <button id="rescanBtn" class="btn secondary">ใช้ QR อื่น</button>
+ </div>
+</section>
+
+<div id="status" class="status">พร้อมอ่าน QR ประจำตัว</div>
+</section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/login.js"></script>
+<script>if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');</script>
+</body></html>
