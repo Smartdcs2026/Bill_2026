@@ -7,11 +7,79 @@ async function guard(){try{const d=await Api.request('/api/staff/me');if(d.user.
 async function loadUsers(){try{$('usersStatus').textContent='กำลังโหลด...';const p=new URLSearchParams({q:$('userSearch').value.trim(),role:$('roleFilter').value,status:$('statusFilter').value,limit:'500'});const d=await Api.request('/api/admin/users?'+p);users=d.users||[];render();$('usersStatus').textContent=`พบ ${users.length} คน`}catch(e){UI.error('โหลดข้อมูลไม่สำเร็จ',e.message)}}
 function render(){$('usersBody').innerHTML=users.map(u=>`<tr><td>${esc(u.displayName)}</td><td>${esc(u.username)}</td><td>${esc(u.employeeCode||'-')}</td><td><span class="badge">${esc(roleName(u.roleCode))}</span></td><td><span class="badge ${u.isActive?'':'off'}">${u.isActive?'ใช้งาน':'ปิดใช้งาน'}</span></td><td>${u.activeQrCount||0}</td><td><div class="actions-row"><button class="btn btn-secondary compact" data-act="edit" data-id="${u.id}">แก้ไข</button><button class="btn ${u.isActive?'btn-danger':'btn-primary'} compact" data-act="status" data-id="${u.id}">${u.isActive?'ปิด':'เปิด'}</button>${u.roleCode==='FIELD_USER'?`<button class="btn btn-primary compact" data-act="qr" data-id="${u.id}">สร้าง QR</button>`:''}</div></td></tr>`).join('')||'<tr><td colspan="7">ยังไม่มีข้อมูล</td></tr>'}
 function openUser(u=null){$('editUserId').value=u?.id||'';$('editDisplayName').value=u?.displayName||'';$('editUsername').value=u?.username||'';$('editEmployeeCode').value=u?.employeeCode||'';$('editPassword').value='';$('editRoleCode').value=u?.roleCode||'FIELD_USER';$('userDialogTitle').textContent=u?'แก้ไขผู้ใช้งาน':'เพิ่มผู้ใช้งาน';$('userDialog').showModal()}
-async function saveUser(){try{const id=$('editUserId').value,payload={id,displayName:$('editDisplayName').value,username:$('editUsername').value,employeeCode:$('editEmployeeCode').value,password:$('editPassword').value,roleCode:$('editRoleCode').value};UI.loading('กำลังบันทึก...');await Api.request(id?'/api/admin/users/update':'/api/admin/users/create',{method:'POST',body:JSON.stringify(payload)});UI.close();$('userDialog').close();await UI.success('บันทึกสำเร็จ');await loadUsers()}catch(e){UI.close();UI.error('บันทึกไม่สำเร็จ',e.message)}}
+let savingUser=false;
+async function saveUser(){
+ if(savingUser)return;
+
+ const dialog=$('userDialog');
+ const saveBtn=$('saveUserBtn');
+ const id=$('editUserId').value;
+ const payload={
+  id,
+  displayName:$('editDisplayName').value.trim(),
+  username:$('editUsername').value.trim().toLowerCase(),
+  employeeCode:$('editEmployeeCode').value.trim(),
+  password:$('editPassword').value,
+  roleCode:$('editRoleCode').value
+ };
+
+ if(!payload.displayName){
+  await UI.error('ข้อมูลไม่ครบ','กรุณากรอกชื่อผู้ใช้งาน');
+  $('editDisplayName').focus();
+  return;
+ }
+ if(!/^[a-z0-9._-]{3,80}$/.test(payload.username)){
+  await UI.error('Username ไม่ถูกต้อง','ใช้ตัวอักษรอังกฤษพิมพ์เล็ก ตัวเลข จุด ขีดกลาง หรือขีดล่าง อย่างน้อย 3 ตัว');
+  $('editUsername').focus();
+  return;
+ }
+ if(['ADMIN','REVIEWER'].includes(payload.roleCode)&&!id&&!/^(?=.*[A-Za-z])(?=.*\d).{10,}$/.test(payload.password)){
+  await UI.error('รหัสผ่านไม่ถูกต้อง','Admin และหัวหน้างานต้องมีรหัสผ่านอย่างน้อย 10 ตัว และมีทั้งตัวอักษรกับตัวเลข');
+  $('editPassword').focus();
+  return;
+ }
+
+ savingUser=true;
+ saveBtn.disabled=true;
+ saveBtn.textContent='กำลังบันทึก...';
+
+ /*
+  Native <dialog> อยู่ใน browser top layer ซึ่งอยู่เหนือ SweetAlert
+  จึงต้องปิด dialog ก่อนเปิด Loading/ข้อความแจ้งผล
+ */
+ if(dialog.open)dialog.close();
+
+ try{
+  UI.loading(id?'กำลังแก้ไขผู้ใช้งาน...':'กำลังเพิ่มผู้ใช้งาน...');
+  const result=await Api.request(
+   id?'/api/admin/users/update':'/api/admin/users/create',
+   {method:'POST',body:JSON.stringify(payload)}
+  );
+  UI.close();
+  await UI.success('บันทึกสำเร็จ',result.message||'บันทึกข้อมูลผู้ใช้งานเรียบร้อยแล้ว');
+  await loadUsers();
+ }catch(e){
+  UI.close();
+  await UI.error('บันทึกไม่สำเร็จ',e.message||'ระบบไม่สามารถบันทึกข้อมูลได้');
+  /*
+   เปิดฟอร์มเดิมกลับมาโดยข้อมูลที่กรอกยังอยู่
+   เพื่อให้ผู้ใช้แก้ไขแล้วลองบันทึกใหม่
+  */
+  if(!dialog.open)dialog.showModal();
+ }finally{
+  savingUser=false;
+  saveBtn.disabled=false;
+  saveBtn.textContent='บันทึก';
+ }
+}
 async function setStatus(u){const c=await UI.confirm(`${u.isActive?'ปิด':'เปิด'}บัญชี ${u.displayName}?`,u.isActive?'Session ที่ใช้งานอยู่จะถูกยกเลิกทันที':'ผู้ใช้จะกลับมาเข้าสู่ระบบได้',u.isActive?'ยืนยันปิดบัญชี':'ยืนยันเปิดบัญชี');if(!c.isConfirmed)return;try{UI.loading();await Api.request('/api/admin/users/status',{method:'POST',body:JSON.stringify({id:u.id,isActive:!u.isActive})});UI.close();await UI.success('ดำเนินการสำเร็จ');loadUsers()}catch(e){UI.close();UI.error('ดำเนินการไม่สำเร็จ',e.message)}}
 async function createQr(u){try{UI.loading('กำลังสร้าง QR...');const d=await Api.request('/api/admin/qr/create',{method:'POST',body:JSON.stringify({userId:u.id,expiresDays:30,revokeExisting:true})});const holder=document.createElement('div');new QRCode(holder,{text:d.qrPayload,width:700,height:700,correctLevel:QRCode.CorrectLevel.H});await new Promise(r=>setTimeout(r,200));const img=holder.querySelector('img'),canvas=holder.querySelector('canvas'),href=img?.src||canvas?.toDataURL('image/png');const a=document.createElement('a');a.download=`QR_${u.employeeCode||u.username}_${u.displayName}.png`;a.href=href;a.click();UI.close();await UI.success('สร้าง QR สำเร็จ',`หมดอายุ ${d.expiresAt}`);loadUsers()}catch(e){UI.close();UI.error('สร้าง QR ไม่สำเร็จ',e.message)}}
 $('usersBody').addEventListener('click',e=>{const b=e.target.closest('button[data-act]');if(!b)return;const u=users.find(x=>x.id===b.dataset.id);if(!u)return;if(b.dataset.act==='edit')openUser(u);if(b.dataset.act==='status')setStatus(u);if(b.dataset.act==='qr')createQr(u)});
-$('refreshUsersBtn').onclick=loadUsers;$('newUserBtn').onclick=()=>openUser();$('saveUserBtn').onclick=saveUser;$('closeUserDialog').onclick=()=>$('userDialog').close();
+$('refreshUsersBtn').onclick=loadUsers;
+$('newUserBtn').onclick=()=>openUser();
+$('saveUserBtn').onclick=e=>{e.preventDefault();saveUser()};
+$('closeUserDialog').onclick=e=>{e.preventDefault();if(!savingUser)$('userDialog').close()};
+$('editUsername').addEventListener('blur',e=>{e.target.value=e.target.value.trim().toLowerCase()});
 $('roleFilter').onchange=loadUsers;$('statusFilter').onchange=loadUsers;$('userSearch').onkeydown=e=>{if(e.key==='Enter')loadUsers()};
 guard().then(loadUsers);
 })();
