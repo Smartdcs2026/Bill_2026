@@ -1,52 +1,25 @@
-<!doctype html>
-<html lang="th">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RetailInsight — Database Health</title>
-<link rel="stylesheet" href="assets/css/admin-console.css">
-<link rel="stylesheet" href="assets/css/database-health.css">
-</head>
-<body>
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RetailInsight — สถานะฐานข้อมูล</title><link rel="stylesheet" href="assets/css/admin-console.css"></head><body>
 <header class="admin-top">
- <button class="menu-btn" id="menuBtn">☰</button>
- <div class="admin-brand"><b>RetailInsight</b><span>Admin Console</span></div>
- <div class="top-spacer"></div><span class="admin-role">ADMIN</span>
-</header>
-<div class="admin-layout">
-<aside class="side" id="side">
- <a href="admin-users.html">ผู้ใช้งานและ QR</a>
- <a href="admin-user-month-import.html">งานรายบุคคล</a>
- <a href="admin-import.html">ข้อมูลร้าน</a>
- <a href="admin-field-visibility.html">การมองเห็นข้อมูล</a>
- <a href="admin-database-health.html" class="active">สถานะฐานข้อมูล</a>
- <a href="admin-login.html">ออกจากระบบ</a>
-</aside>
-<main class="content">
- <div class="page-head">
-  <div><h1>สถานะฐานข้อมูล</h1><p>ตรวจว่า Worker และ Cloudflare D1 ใช้ Schema ชุดเดียวกัน</p></div>
-  <button id="checkBtn" class="btn primary">ตรวจสอบอีกครั้ง</button>
- </div>
- <section class="metric-grid">
-  <div class="metric"><span>สถานะ</span><b id="healthState">-</b></div>
-  <div class="metric"><span>ตาราง</span><b id="tableCount">-</b></div>
-  <div class="metric"><span>ดัชนี</span><b id="indexCount">-</b></div>
-  <div class="metric"><span>ตรวจล่าสุด</span><b id="checkedAt" class="small-value">-</b></div>
- </section>
- <section class="panel health-panel">
-  <div id="summary" class="health-summary">กำลังตรวจสอบ…</div>
-  <div class="health-grid">
-   <div><h3>ตารางที่ขาด</h3><div id="missingTables" class="result-box"></div></div>
-   <div><h3>คอลัมน์ที่ขาด</h3><div id="missingColumns" class="result-box"></div></div>
-   <div><h3>ดัชนีที่ขาด</h3><div id="missingIndexes" class="result-box"></div></div>
-   <div><h3>ประวัติ Migration</h3><div id="migrations" class="result-box"></div></div>
-  </div>
- </section>
-</main>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="assets/js/config.js"></script>
-<script src="assets/js/api.js"></script>
-<script src="assets/js/ui-alerts.js"></script>
-<script src="assets/js/admin-database-health.js"></script>
-</body></html>
+<button class="menu-btn" id="menuBtn" type="button">☰</button>
+<div class="admin-brand"><span class="brand-symbol">RI</span><span class="brand-copy"><b>RetailInsight</b><small>Administration</small></span></div>
+<div class="top-spacer"></div><div class="admin-account"><span class="online-dot"></span><span>Admin</span></div>
+</header><div class="admin-layout"><aside class="side" id="side"><div class="nav-section">จัดการระบบ</div><a href="admin.html"><span class="nav-icon">H</span><span>หน้าหลัก Admin</span></a><a href="admin-users.html"><span class="nav-icon">U</span><span>ผู้ใช้งานและ QR</span></a><a href="admin-user-month-import.html"><span class="nav-icon">M</span><span>งานรายบุคคล</span></a><a href="admin-import.html"><span class="nav-icon">S</span><span>ข้อมูลร้าน</span></a><a href="admin-field-visibility.html"><span class="nav-icon">V</span><span>การมองเห็นข้อมูล</span></a><a href="admin-database-health.html" class="active"><span class="nav-icon">D</span><span>สถานะฐานข้อมูล</span></a><div class="nav-section nav-section-bottom">บัญชี</div><a href="admin-login.html"><span class="nav-icon">↪</span><span>ออกจากระบบ</span></a></aside><main class="content">
+<div class="page-head"><div><div class="eyebrow">SYSTEM HEALTH</div><h1>สถานะฐานข้อมูล</h1><p>ตรวจว่า Cloudflare Worker และ D1 ใช้ Schema ชุดเดียวกัน</p></div>
+<div class="page-actions"><a class="back-link" href="admin.html">← หน้าหลัก Admin</a><button id="checkBtn" class="btn primary">ตรวจสอบอีกครั้ง</button></div></div>
+<section class="metric-grid">
+<article class="metric"><div class="metric-icon">✓</div><div><span>สถานะ</span><b id="healthState">-</b></div></article>
+<article class="metric"><div class="metric-icon">T</div><div><span>ตาราง</span><b id="tableCount">-</b></div></article>
+<article class="metric"><div class="metric-icon">I</div><div><span>ดัชนี</span><b id="indexCount">-</b></div></article>
+<article class="metric"><div class="metric-icon">⏱</div><div><span>ตรวจล่าสุด</span><b id="checkedAt" class="small-value">-</b></div></article>
+</section>
+<section class="admin-section"><div class="section-body">
+<div id="summary" class="health-summary">กำลังตรวจสอบ…</div>
+<div class="health-grid">
+<div class="health-box"><h3>ตารางที่ขาด</h3><div id="missingTables" class="result-box"></div></div>
+<div class="health-box"><h3>คอลัมน์ที่ขาด</h3><div id="missingColumns" class="result-box"></div></div>
+<div class="health-box"><h3>ดัชนีที่ขาด</h3><div id="missingIndexes" class="result-box"></div></div>
+<div class="health-box"><h3>ประวัติ Migration</h3><div id="migrations" class="result-box"></div></div>
+</div></div></section>
+</main></div><script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="assets/js/config.js"></script><script src="assets/js/api.js"></script><script src="assets/js/ui-alerts.js"></script><script src="assets/js/admin-database-health.js"></script></body></html>
