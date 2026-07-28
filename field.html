@@ -1,59 +1,7 @@
-<!doctype html>
-<html lang="th">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#174ea6">
-<title>RetailInsight — งานของฉัน</title>
-<link rel="stylesheet" href="assets/css/field-workspace.css">
-</head>
-<body>
-<header class="field-header">
-  <div class="header-main">
-    <div>
-      <div class="brand">RetailInsight</div>
-      <div class="welcome">สวัสดี <strong id="userName">กำลังโหลด…</strong></div>
-    </div>
-    <button id="logoutBtn" class="logout-btn" type="button">ออกจากระบบ</button>
-  </div>
-
-  <div class="work-toolbar">
-    <label class="month-field">
-      <span>เดือนงาน</span>
-      <select id="monthSelect"></select>
-    </label>
-    <div class="work-summary">
-      <div><b id="totalJobs">0</b><span>งานทั้งหมด</span></div>
-      <div><b id="draftJobs">0</b><span>กำลังทำ</span></div>
-      <div><b id="sentJobs">0</b><span>ส่งแล้ว</span></div>
-    </div>
-  </div>
-</header>
-
-<main class="page">
-  <section class="field-tip">
-    <div>
-      <b>งานของฉัน</b>
-      <span>แตะร้านเพื่อเปิดกรอกยอดลูกค้า วันที่ และเวลา</span>
-    </div>
-    <span id="draftStatus" class="save-state">พร้อมใช้งาน</span>
-  </section>
-
-  <section id="jobList" class="job-list"></section>
-</main>
-
-<nav class="bottom-nav" aria-label="เมนูผู้ปฏิบัติงาน">
-  <button class="active" type="button"><span>▦</span><b>งานของฉัน</b></button>
-  <button id="draftNavBtn" type="button"><span>✓</span><b>ฉบับร่าง</b></button>
-  <button id="topBtn" type="button"><span>↑</span><b>ด้านบน</b></button>
-</nav>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="assets/js/config.js"></script>
-<script src="assets/js/api.js"></script>
-<script src="assets/js/ui-alerts.js"></script>
-<script src="assets/js/date-th.js"></script>
-<script src="assets/js/local-draft-db.js"></script>
-<script src="assets/js/field-workspace.js"></script>
-</body>
-</html>
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101828"><title>RetailInsight — งานของฉัน</title><link rel="stylesheet" href="assets/css/field-workspace.css"></head><body>
+<header class="topbar"><div class="identity"><span class="logo">RI</span><span><b>RetailInsight</b><small id="userName">กำลังโหลด…</small></span></div><div class="top-actions"><button id="calendarBtn" class="icon-btn">▦<i id="calendarBadge" class="hidden">0</i></button><button id="menuBtn" class="icon-btn">⋮</button></div></header>
+<section class="summary"><button id="dateFilterBtn" class="date-filter"><span><small>งานที่แสดง</small><b id="selectedDateLabel">ทุกวันที่มีงาน</b></span><em>⌄</em></button><div class="counts"><span><b id="totalJobs">0</b><small>ทั้งหมด</small></span><span><b id="draftJobs">0</b><small>กำลังทำ</small></span><span><b id="sentJobs">0</b><small>ส่งแล้ว</small></span></div></section>
+<main><div class="heading"><span><b id="listTitle">รายการร้าน</b><small id="listSubtitle">แตะร้านเพื่อเปิดกรอกข้อมูล</small></span><mark id="draftStatus">บันทึกอัตโนมัติ</mark></div><section id="jobList" class="store-list"></section></main>
+<div id="calendarSheet" class="overlay hidden"><section class="sheet"><div class="handle"></div><header><span><small>WORK CALENDAR</small><h2>ปฏิทินวันทำงาน</h2></span><button id="closeCalendarBtn">×</button></header><div class="month-nav"><button id="prevMonthBtn">‹</button><b id="calendarMonthLabel">-</b><button id="nextMonthBtn">›</button></div><div class="week"><span>อา</span><span>จ</span><span>อ</span><span>พ</span><span>พฤ</span><span>ศ</span><span>ส</span></div><div id="calendarGrid" class="calendar"></div><footer><span><i></i> วันที่มีงาน</span><button id="showAllDatesBtn">แสดงทุกวัน</button></footer></section></div>
+<div id="menuSheet" class="overlay hidden"><section class="sheet menu"><div class="handle"></div><button id="refreshBtn">↻ โหลดรายการงานใหม่</button><button id="showDraftBtn">✓ ไปยังงานที่บันทึกไว้</button><button id="logoutBtn" class="danger">↪ ออกจากระบบ</button></section></div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script><script src="assets/js/config.js"></script><script src="assets/js/api.js"></script><script src="assets/js/ui-alerts.js"></script><script src="assets/js/date-th.js"></script><script src="assets/js/local-draft-db.js"></script><script src="assets/js/field-workspace.js"></script></body></html>
