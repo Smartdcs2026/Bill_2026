@@ -1,159 +1,17 @@
-<!DOCTYPE html>
-
-<html lang="th">
-<head>
-<meta charset="utf-8"/>
-<meta content="width=device-width,initial-scale=1" name="viewport"/>
-<title>RetailInsight — งานรายบุคคลประจำเดือน</title>
-<link href="assets/css/admin-console.css?v=R05S01" rel="stylesheet"/>
-</head>
-<body>
-<header class="admin-top">
-<button class="menu-btn" id="menuBtn" type="button">☰</button>
-<div class="admin-brand">
-<span class="brand-symbol">RI</span>
-<span class="brand-copy"><b>RetailInsight</b><small>Administration</small></span>
-</div>
-<div class="top-spacer"></div>
-<div class="admin-account"><span class="online-dot"></span><span>Admin</span><small class="build-badge" title="เวอร์ชันหน้าจอผู้ดูแลระบบ">R05-S01</small></div>
-</header>
-<div class="admin-layout">
-<aside class="side" id="side"><div class="nav-section">จัดการระบบ</div><a href="admin.html"><span class="nav-icon">H</span><span>หน้าหลัก Admin</span></a><a href="admin-users.html"><span class="nav-icon">U</span><span>ผู้ใช้งานและ QR</span></a><a class="active" href="admin-user-month-import.html"><span class="nav-icon">M</span><span>งานรายบุคคล</span></a><a href="admin-import.html"><span class="nav-icon">S</span><span>ข้อมูลร้านและแผนงาน</span></a><a href="admin-pos-management.html"><span class="nav-icon">P</span><span>จัดการเครื่อง POS</span></a><a href="admin-receipt-policies.html"><span class="nav-icon">R</span><span>นโยบายการอ่านบิล</span></a><a href="admin-pos-reasons.html"><span class="nav-icon">E</span><span>เหตุผลกรณี POS ไม่มีข้อมูล</span></a><a href="admin-field-visibility.html"><span class="nav-icon">V</span><span>การมองเห็นข้อมูล</span></a><a href="admin-database-health.html"><span class="nav-icon">D</span><span>สถานะฐานข้อมูล</span></a><div class="nav-section nav-section-bottom">บัญชี</div><a href="admin-login.html"><span class="nav-icon">↪</span><span>ออกจากระบบ</span></a></aside>
-<main class="content">
-<div class="page-head">
-<div>
-<div class="eyebrow">MONTHLY ASSIGNMENT</div>
-<h1>อัปโหลดงานรายบุคคลประจำเดือน</h1>
-<p>ตรวจไฟล์และดูตัวอย่างหน้าผู้ปฏิบัติงานก่อนนำเข้าจริง</p>
-</div>
-<div class="page-actions">
-<button class="back-link" id="downloadTemplateBtn" type="button">ดาวน์โหลดแม่แบบ CSV</button>
-<a class="back-link" href="admin.html">← หน้าหลัก Admin</a>
-</div>
-</div>
-<div class="admin-page-grid">
-<section class="admin-section">
-<div class="section-head">
-<div class="section-title-wrap">
-<span class="section-number">1</span>
-<div>
-<h2>กำหนดเจ้าของงานและรอบงาน</h2>
-<p>หนึ่งไฟล์เป็นงานของผู้ปฏิบัติงานหนึ่งคนในเดือนที่เลือก</p>
-</div>
-</div>
-</div>
-<div class="section-body">
-<div class="admin-form-grid monthly-contract-grid">
-<label>ผู้ปฏิบัติงาน
-            <select id="operatorUserId"></select>
-</label>
-<label>เดือนงาน
-            <input id="workMonth" type="month"/>
-</label>
-<label>วันที่เริ่มต้น
-            <small>ใช้เมื่อแถวในไฟล์ไม่มี Work Date</small>
-<input id="defaultWorkDate" type="date"/>
-</label>
-<label>รหัสรอบ
-            <input id="roundId" placeholder="เช่น 2026-07-R01"/>
-</label>
-<label class="wide">ชื่อรอบ
-            <input id="roundName" placeholder="เช่น งานสำรวจรอบต้นเดือน"/>
-</label>
-<label>รูปบิลขั้นต่ำ
-            <input id="receiptSlots" max="30" min="1" type="number" value="1"/>
-</label>
-<label>รูปร้านขั้นต่ำ
-            <input id="storeSlots" max="30" min="1" type="number" value="5"/>
-</label>
-<label>กฎยอดลูกค้าเริ่มต้น
-            <select id="defaultRunMode">
-<option value="CONTINUOUS">รันต่อเนื่อง</option>
-<option value="MONTHLY_RESET">เริ่มใหม่ทุกเดือน</option>
-<option value="NO_SEQUENCE_CHECK">ไม่ตรวจลำดับ</option>
-</select>
-</label>
-</div>
-<div class="file-contract-note">
-<b>คอลัมน์หลักที่รองรับ</b>
-<span>Brand, Business Type, Store Code, Store Name, POS, Open–Close, Address, Store Type, Rank, Latitude, Longitude, Work Date, Note, Receipt Slots, Store Photo Slots, Customer Run Mode</span>
-</div>
-<div class="file-drop contract-drop">
-<input accept=".xlsx,.xls,.csv" id="fileInput" type="file"/>
-<small>รองรับ Excel และ CSV ระบบจะจับคู่ชื่อคอลัมน์ไทย/อังกฤษที่ใกล้เคียงให้อัตโนมัติ</small>
-</div>
-<div class="form-actions">
-<button class="btn primary" id="previewBtn" type="button">ตรวจสอบไฟล์</button>
-<button class="btn secondary" disabled="" id="mobilePreviewBtn" type="button">ดูตัวอย่างหน้าผู้ปฏิบัติงาน</button>
-<button class="btn secondary" disabled="" id="commitBtn" type="button">ยืนยันอัปโหลดงาน</button>
-</div>
-<div class="inline-status" id="importStatus">ยังไม่ได้เลือกไฟล์</div>
-</div>
-</section>
-<section class="admin-section">
-<div class="section-head">
-<div class="section-title-wrap">
-<span class="section-number">2</span>
-<div>
-<h2>ผลตรวจสอบก่อนนำเข้า</h2>
-<p>ตรวจจำนวนร้าน วันที่ POS ข้อมูลซ้ำ และกฎยอดลูกค้าก่อนยืนยัน</p>
-</div>
-</div>
-</div>
-<div class="section-body">
-<div class="preview-summary" id="summary"></div>
-<div class="contract-warnings hidden" id="contractWarnings"></div>
-<div class="data-table-wrap contract-table-wrap">
-<table class="data-table contract-table">
-<thead>
-<tr>
-<th>แถว</th>
-<th>แบรนด์</th>
-<th>รหัสร้าน</th>
-<th>ชื่อร้าน</th>
-<th>POS</th>
-<th>วันที่งาน</th>
-<th>รูปบิล</th>
-<th>รูปร้าน</th>
-<th>กฎยอดลูกค้า</th>
-<th>ผลตรวจ</th>
-</tr>
-</thead>
-<tbody id="previewBody"></tbody>
-</table>
-</div>
-</div>
-</section>
-</div>
-</main>
-</div>
-<dialog class="worker-preview-dialog" id="workerPreviewDialog">
-<div class="worker-preview-shell">
-<header class="worker-preview-head">
-<div>
-<span class="worker-preview-logo">RI</span>
-<span><b>RetailInsight</b><small id="previewOperatorName">ผู้ปฏิบัติงาน</small></span>
-</div>
-<button id="closeWorkerPreviewBtn" type="button">×</button>
-</header>
-<div class="worker-preview-calendar">
-<button id="previewPrevDayBtn" type="button">‹</button>
-<div><small>วันที่ทำงาน</small><b id="previewWorkDate">-</b></div>
-<button id="previewNextDayBtn" type="button">›</button>
-</div>
-<div class="worker-preview-summary">
-<span><b id="previewStoreCount">0</b><small>ร้าน</small></span>
-<span><b id="previewPosCount">0</b><small>POS</small></span>
-<span><b id="previewPhotoCount">0</b><small>รูปขั้นต่ำ</small></span>
-</div>
-<div class="worker-preview-list" id="workerPreviewList"></div>
-</div>
-</dialog>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="assets/js/config.js?v=R05S01"></script>
-<script src="assets/js/api.js?v=R05S01"></script>
-<script src="assets/js/ui-alerts.js?v=R05S01"></script>
-<script src="assets/js/admin-user-month-import.js?v=R05S01"></script>
-</body>
-</html>
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RetailInsight — แผนงานรายบุคคล</title><link rel="stylesheet" href="assets/css/admin-console.css?v=R05S04"></head><body>
+<header class="admin-top"><button class="menu-btn" id="menuBtn">☰</button><div class="admin-brand"><span class="brand-symbol">RI</span><span class="brand-copy"><b>RetailInsight</b><small>Individual Workplan Center</small></span></div><div class="top-spacer"></div><div class="admin-account"><span class="online-dot"></span><span id="adminName">Admin</span><small class="build-badge">R05-S04</small></div></header>
+<div class="admin-layout"><aside class="side" id="side"><div class="nav-section">จัดการระบบ</div><a href="admin.html"><span class="nav-icon">H</span><span>หน้าหลัก Admin</span></a><a href="admin-users.html"><span class="nav-icon">U</span><span>ผู้ใช้งานและ QR</span></a><a class="active" href="admin-user-month-import.html"><span class="nav-icon">M</span><span>สร้าง/อัปโหลดแผนงานรายบุคคล</span></a><a href="admin-import.html"><span class="nav-icon">S</span><span>ข้อมูลร้านและแผนงาน</span></a></aside>
+<main class="content"><div class="page-head"><div><div class="eyebrow">INDIVIDUAL MONTHLY WORKPLAN</div><h1>สร้างและอัปโหลดแผนงานรายบุคคล</h1><p>เลือกเดือน หัวหน้างาน และผู้ปฏิบัติงานหลายคน ระบบสร้าง Excel แยกรายคนและรวมเป็น ZIP</p></div><div class="page-actions"><a class="back-link" href="admin.html">กลับหน้าหลัก</a></div></div>
+<section class="admin-section"><div class="section-head"><div class="section-title-wrap"><span class="section-number">1</span><div><h2>สร้างเท็มเพลต</h2><p>ข้อมูลหัวหน้า ผู้ปฏิบัติงาน เดือน และรหัสเท็มเพลตจะถูกใส่และล็อกอัตโนมัติ</p></div></div></div><div class="section-body">
+<div class="admin-form-grid"><label>เดือนแผนงาน<input id="workMonth" type="month"></label><label>หัวหน้างาน<select id="supervisor"><option value="">กำลังโหลด…</option></select></label><label class="wide">ค้นหาผู้ปฏิบัติงาน<input id="workerSearch" placeholder="ค้นหารหัสหรือชื่อ"></label></div>
+<div class="selection-toolbar"><button class="btn secondary" id="selectAll">เลือกทั้งหมดที่แสดง</button><button class="btn secondary" id="clearAll">ยกเลิกทั้งหมด</button><span id="selectedCount">เลือก 0 คน</span></div>
+<div class="worker-picker" id="workerPicker"><div class="feature-state">กรุณาเลือกหัวหน้างาน</div></div>
+<div class="template-summary" id="templateSummary"><b>ยังไม่ได้เลือกรายการ</b><span>ระบบรองรับสูงสุด 30 คนต่อการสร้างหนึ่งครั้ง</span></div>
+<div class="form-actions"><button class="btn primary" id="generateBtn">สร้างเท็มเพลตและดาวน์โหลด ZIP</button></div><div class="inline-status" id="generateStatus">พร้อมใช้งาน</div>
+</div></section>
+<section class="admin-section"><div class="section-head"><div class="section-title-wrap"><span class="section-number">2</span><div><h2>อัปโหลดแผนงานที่กรอกแล้ว</h2><p>อัปโหลดครั้งละหนึ่งไฟล์ ระบบอ่านข้อมูลผู้ปฏิบัติงานจากส่วนที่ล็อกไว้และตรวจทุกแถวก่อนบันทึก</p></div></div></div><div class="section-body">
+<div class="upload-drop" id="uploadDrop"><input id="uploadFile" type="file" accept=".xlsx" hidden><button class="btn secondary" id="chooseFile">เลือกไฟล์ .xlsx</button><span id="fileName">ยังไม่ได้เลือกไฟล์</span></div>
+<div id="uploadPreview" class="feature-state">เมื่อเลือกไฟล์ ระบบจะแสดงเดือน หัวหน้า ผู้ปฏิบัติงาน จำนวนร้าน และจำนวนงาน</div>
+<div class="form-actions"><button class="btn primary" id="commitBtn" disabled>ยืนยันนำเข้าแผนงาน</button></div><div class="inline-status" id="uploadStatus">รอเลือกไฟล์</div>
+</div></section></main></div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script><script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script><script src="assets/js/config.js?v=R05S04"></script><script src="assets/js/api.js?v=R05S04"></script><script src="assets/js/ui-alerts.js?v=R05S04"></script><script src="assets/js/admin-user-month-import.js?v=R05S04"></script></body></html>

@@ -1,5 +1,6 @@
-const CACHE='retailinsight-r05-s02';
+const CACHE='retailinsight-r05-s04';
 const ASSETS=['./','login.html','field.html','admin.html','assets/css/app.css','assets/css/admin-console.css','assets/js/config.js','assets/js/api.js','assets/js/login.js',
+  './admin-user-month-import.html','./assets/js/admin-user-month-import.js',
   './deployment-check.html',
   './assets/js/deployment-check.js'];
 self.addEventListener('install',event=>{self.skipWaiting();event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)));});
