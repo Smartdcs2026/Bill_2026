@@ -1,22 +1,18 @@
-<!DOCTYPE html>
-
-<html lang="th"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/>
-<title>RetailInsight — หน้าหลัก Admin</title><link href="assets/css/admin-console.css?v=R05S04" rel="stylesheet"/></head><body>
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RetailInsight — หน้าหลัก Admin</title><link rel="stylesheet" href="assets/css/admin-console.css"></head><body>
 <header class="admin-top">
 <button class="menu-btn" id="menuBtn" type="button">☰</button>
 <div class="admin-brand"><span class="brand-symbol">RI</span><span class="brand-copy"><b>RetailInsight</b><small>Administration</small></span></div>
-<div class="top-spacer"></div><div class="admin-account"><span class="online-dot"></span><span>Admin</span><small class="build-badge" title="เวอร์ชันหน้าจอผู้ดูแลระบบ">R05-S04</small></div>
-</header><div class="admin-layout"><aside class="side" id="side"><div class="nav-section">จัดการระบบ</div><a class="active" href="admin.html"><span class="nav-icon">H</span><span>หน้าหลัก Admin</span></a><a href="admin-users.html"><span class="nav-icon">U</span><span>ผู้ใช้งานและ QR</span></a><a href="admin-user-month-import.html"><span class="nav-icon">M</span><span>สร้าง/อัปโหลดแผนงานรายบุคคล</span></a><a href="admin-import.html"><span class="nav-icon">S</span><span>ข้อมูลร้านและแผนงาน</span></a><a href="admin-pos-management.html"><span class="nav-icon">P</span><span>จัดการเครื่อง POS</span></a><a href="admin-receipt-policies.html"><span class="nav-icon">R</span><span>นโยบายการอ่านบิล</span></a><a href="admin-pos-reasons.html"><span class="nav-icon">E</span><span>เหตุผลกรณี POS ไม่มีข้อมูล</span></a><a href="admin-field-visibility.html"><span class="nav-icon">V</span><span>การมองเห็นข้อมูล</span></a><a href="deployment-check.html"><span class="nav-icon">T</span><span>ตรวจสอบระบบครบวงจร</span></a><a href="admin-database-health.html"><span class="nav-icon">D</span><span>สถานะฐานข้อมูล</span></a><div class="nav-section nav-section-bottom">บัญชี</div><a href="admin-login.html"><span class="nav-icon">↪</span><span>ออกจากระบบ</span></a></aside><main class="content">
+<div class="top-spacer"></div><div class="admin-account"><span class="online-dot"></span><span>Admin</span></div>
+</header><div class="admin-layout"><aside class="side" id="side"><div class="nav-section">จัดการระบบ</div><a href="admin.html" class="active"><span class="nav-icon">H</span><span>หน้าหลัก Admin</span></a><a href="admin-users.html"><span class="nav-icon">U</span><span>ผู้ใช้งานและ QR</span></a><a href="admin-user-month-import.html"><span class="nav-icon">M</span><span>งานรายบุคคล</span></a><a href="admin-field-visibility.html"><span class="nav-icon">V</span><span>การมองเห็นข้อมูล</span></a><a href="admin-database-health.html"><span class="nav-icon">D</span><span>สถานะฐานข้อมูล</span></a><div class="nav-section nav-section-bottom">บัญชี</div><a href="admin-login.html"><span class="nav-icon">↪</span><span>ออกจากระบบ</span></a></aside><main class="content">
 <div class="page-head"><div><div class="eyebrow">ADMIN HOME</div><h1>หน้าหลักผู้ดูแลระบบ</h1><p>เลือกส่วนงานที่ต้องการ หรือเปลี่ยนรหัสผ่านประจำรอบของผู้ปฏิบัติงาน</p></div>
 <div class="page-actions"><a class="back-link" href="admin-users.html">ไปหน้าผู้ใช้งาน</a></div></div>
 <section class="dashboard-grid">
 <a class="dashboard-card" href="admin-users.html"><div class="card-icon">U</div><b>ผู้ใช้งานและ QR</b><p>เพิ่มบัญชี แก้ไขสิทธิ์ สร้าง ออกใหม่ หรือยกเลิก QR ประจำตัว</p></a>
-<a class="dashboard-card" href="admin-user-month-import.html"><div class="card-icon">M</div><b>สร้างและอัปโหลดแผนงานรายบุคคล</b><p>เลือกหัวหน้า เลือกผู้ปฏิบัติงานหลายคน สร้างเท็มเพลตแยกรายคน และอัปโหลดกลับเข้าระบบ</p></a>
-<a class="dashboard-card" href="admin-import.html"><div class="card-icon">S</div><b>ข้อมูลร้านและแผนงาน</b><p>นำเข้าข้อมูลร้าน โครงสร้าง POS และข้อมูลตั้งต้นจาก Excel หรือ CSV</p></a>
-<a class="dashboard-card" href="admin-pos-management.html"><div class="card-icon">P</div><b>จัดการเครื่อง POS</b><p>เพิ่ม ลด หรือแก้ไขเครื่อง POS รายร้าน พร้อมบันทึกประวัติและส่งออกหมายเหตุ</p></a><a class="dashboard-card" href="admin-receipt-policies.html"><div class="card-icon">R</div><b>นโยบายการอ่านบิล</b><p>ตั้งกฎยอดลูกค้า วันที่บิล และรูปขั้นต่ำแยกแต่ละแบรนด์</p></a><a class="dashboard-card" href="admin-pos-reasons.html"><div class="card-icon">P</div><b>เหตุผลกรณี POS ไม่มีข้อมูล</b><p>เพิ่ม แก้ไข เปิดหรือปิดเหตุผลที่ผู้ปฏิบัติงานเลือกในแต่ละเครื่อง POS</p></a>
+<a class="dashboard-card" href="admin-user-month-import.html"><div class="card-icon">M</div><b>งานรายบุคคลประจำเดือน</b><p>สร้างเท็มเพลตและอัปโหลดแผนงานรายบุคคล โดยข้อมูลร้านและวันทำงานอยู่ในไฟล์เดียว</p></a>
+
 <a class="dashboard-card" href="admin-field-visibility.html"><div class="card-icon">V</div><b>การมองเห็นข้อมูล</b><p>กำหนดผลตรวจ เหตุผล และสถานะการจ่ายที่ผู้ปฏิบัติงานมองเห็น</p></a>
 <a class="dashboard-card" href="admin-database-health.html"><div class="card-icon">D</div><b>สถานะฐานข้อมูล</b><p>ตรวจความพร้อมของ Worker, D1, ตาราง คอลัมน์ ดัชนี และ Migration</p></a>
-<a class="dashboard-card" href="deployment-check.html"><div class="card-icon">T</div><b>ตรวจสอบระบบครบวงจร</b><p>ตรวจ Frontend, Worker, Session, D1 และ API สำคัญแบบไม่แก้ไขข้อมูล</p></a>
 <a class="dashboard-card security-card" href="login.html"><div class="card-icon">↗</div><b>ทดสอบเข้าสู่ระบบผู้ปฏิบัติงาน</b><p>เปิดหน้าสแกน QR และกรอกรหัสผ่านประจำรอบ</p></a>
 </section>
 <section class="admin-section" style="margin-top:12px">
@@ -24,9 +20,9 @@
 <div class="section-body"><div class="shared-code-box">
 <div class="guide-box">หน้านี้ใช้สำหรับเปลี่ยนรหัสผ่านประจำรอบเท่านั้น การสร้างและยกเลิก QR ให้ทำจากหน้า “ผู้ใช้งานและ QR” จึงไม่ต้องกรอก User ID หรือกำหนดอายุ QR ในหน้านี้อีก</div>
 <div class="admin-form-grid" style="margin-top:12px"><label class="full">รหัสใหม่
-<input autocomplete="off" class="code-input" id="sharedCodeAdmin" maxlength="10" placeholder="เช่น A7K9P2X4Q8"/></label></div>
-<div class="form-actions"><button class="btn primary" id="setSharedCodeBtn" type="button">บันทึกรหัสประจำรอบ</button></div>
-<div class="inline-status" id="sharedCodeStatus">ยังไม่ได้ดำเนินการ</div>
+<input id="sharedCodeAdmin" class="code-input" maxlength="10" autocomplete="off" placeholder="เช่น A7K9P2X4Q8"></label></div>
+<div class="form-actions"><button id="setSharedCodeBtn" class="btn primary" type="button">บันทึกรหัสประจำรอบ</button></div>
+<div id="sharedCodeStatus" class="inline-status">ยังไม่ได้ดำเนินการ</div>
 </div></div></section>
 </main></div><script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="assets/js/config.js?v=R05S04"></script><script src="assets/js/api.js?v=R05S04"></script><script src="assets/js/ui-alerts.js?v=R05S04"></script><script src="assets/js/admin-qr.js?v=R05S04"></script></body></html>
+<script src="assets/js/config.js"></script><script src="assets/js/api.js"></script><script src="assets/js/ui-alerts.js"></script><script src="assets/js/admin-qr.js"></script></body></html>
