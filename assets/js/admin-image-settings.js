@@ -1,5 +1,14 @@
 const $=id=>document.getElementById(id);
-function setStatus(message,type=''){const el=$('status');el.textContent=message;el.className=`inline-status ${type}`.trim()}
+function setStatus(message,type=''){const el=$('status');if(!el)return;el.textContent=message;el.className=`inline-status ${type}`.trim()}
 async function load(){try{const r=await Api.request('/api/admin/settings/image-collection');$('receiptSlots').value=r.settings.receiptSlots;$('storeSlots').value=r.settings.storeSlots;setStatus('พร้อมแก้ไขการตั้งค่า','ok')}catch(e){setStatus(e.message,'error');UI.error('โหลดการตั้งค่าไม่สำเร็จ',e.message)}}
-async function save(){const receiptSlots=Number($('receiptSlots').value),storeSlots=Number($('storeSlots').value);if(!Number.isInteger(receiptSlots)||receiptSlots<1||receiptSlots>20||!Number.isInteger(storeSlots)||storeSlots<1||storeSlots>20)return UI.error('ข้อมูลไม่ถูกต้อง','จำนวนช่องต้องอยู่ระหว่าง 1–20 ช่อง');try{$('saveBtn').disabled=true;const r=await Api.request('/api/admin/settings/image-collection',{method:'POST',body:JSON.stringify({receiptSlots,storeSlots,receiptMin:1,storeMin:1})});setStatus(r.message,'ok');UI.success('บันทึกแล้ว',r.message)}catch(e){setStatus(e.message,'error');UI.error('บันทึกไม่สำเร็จ',e.message)}finally{$('saveBtn').disabled=false}}
+async function save(){
+ const receiptSlots=Number($('receiptSlots').value),storeSlots=Number($('storeSlots').value),applyScope=$('applyScope')?.value||'OPEN_ASSIGNMENTS';
+ if(!Number.isInteger(receiptSlots)||receiptSlots<1||receiptSlots>20||!Number.isInteger(storeSlots)||storeSlots<1||storeSlots>20)return UI.error('ข้อมูลไม่ถูกต้อง','จำนวนช่องต้องอยู่ระหว่าง 1–20 ช่อง');
+ try{
+  $('saveBtn').disabled=true;
+  const r=await Api.request('/api/admin/settings/image-collection',{method:'POST',body:JSON.stringify({receiptSlots,storeSlots,receiptMin:1,storeMin:1,applyScope})});
+  const detail=applyScope==='OPEN_ASSIGNMENTS'?`${r.message}\nงานที่ยังไม่ส่งประมาณ ${Number(r.affectedOpenAssignments||0).toLocaleString('th-TH')} งาน`:'งานที่นำเข้าใหม่จะใช้ค่านี้';
+  setStatus(r.message,'ok');await UI.success('บันทึกแล้ว',detail)
+ }catch(e){setStatus(e.message,'error');UI.error('บันทึกไม่สำเร็จ',e.message)}finally{$('saveBtn').disabled=false}
+}
 $('menuBtn').onclick=()=>document.getElementById('side').classList.toggle('open');$('saveBtn').onclick=save;load();
