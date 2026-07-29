@@ -6,7 +6,7 @@
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
 <meta content="#102a56" name="theme-color"/>
 <title>RetailInsight — ผู้ใช้งานและ QR</title>
-<link href="assets/css/admin-console.css?v=R05S01" rel="stylesheet"/>
+<link href="assets/css/admin-console.css?v=R05S07" rel="stylesheet"/>
 </head>
 <body>
 <header class="admin-top">
@@ -22,7 +22,7 @@
 <small class="build-badge" title="เวอร์ชันหน้าจอผู้ดูแลระบบ">R05-S01</small></div>
 </header>
 <div class="admin-layout">
-<aside class="side" id="side"><div class="nav-section">จัดการระบบ</div><a href="admin.html"><span class="nav-icon">H</span><span>หน้าหลัก Admin</span></a><a class="active" href="admin-users.html"><span class="nav-icon">U</span><span>ผู้ใช้งานและ QR</span></a><a href="admin-user-month-import.html"><span class="nav-icon">M</span><span>งานรายบุคคล</span></a><a href="admin-import.html"><span class="nav-icon">S</span><span>ข้อมูลร้านและแผนงาน</span></a><a href="admin-pos-management.html"><span class="nav-icon">P</span><span>จัดการเครื่อง POS</span></a><a href="admin-receipt-policies.html"><span class="nav-icon">R</span><span>นโยบายการอ่านบิล</span></a><a href="admin-pos-reasons.html"><span class="nav-icon">E</span><span>เหตุผลกรณี POS ไม่มีข้อมูล</span></a><a href="admin-field-visibility.html"><span class="nav-icon">V</span><span>การมองเห็นข้อมูล</span></a><a href="admin-database-health.html"><span class="nav-icon">D</span><span>สถานะฐานข้อมูล</span></a><div class="nav-section nav-section-bottom">บัญชี</div><a href="admin-login.html"><span class="nav-icon">↪</span><span>ออกจากระบบ</span></a></aside>
+<aside class="side" id="side"><div class="nav-section">จัดการระบบ</div><a href="admin.html"><span class="nav-icon">H</span><span>หน้าหลัก Admin</span></a><a class="active" href="admin-users.html"><span class="nav-icon">U</span><span>ผู้ใช้งานและ QR</span></a><a href="admin-team-management.html"><span class="nav-icon">T</span><span>จัดทีมผู้ปฏิบัติงาน</span></a><a href="admin-user-month-import.html"><span class="nav-icon">M</span><span>งานรายบุคคล</span></a><a href="admin-import.html"><span class="nav-icon">S</span><span>ข้อมูลร้านและแผนงาน</span></a><a href="admin-pos-management.html"><span class="nav-icon">P</span><span>จัดการเครื่อง POS</span></a><a href="admin-receipt-policies.html"><span class="nav-icon">R</span><span>นโยบายการอ่านบิล</span></a><a href="admin-pos-reasons.html"><span class="nav-icon">E</span><span>เหตุผลกรณี POS ไม่มีข้อมูล</span></a><a href="admin-field-visibility.html"><span class="nav-icon">V</span><span>การมองเห็นข้อมูล</span></a><a href="admin-database-health.html"><span class="nav-icon">D</span><span>สถานะฐานข้อมูล</span></a><div class="nav-section nav-section-bottom">บัญชี</div><a href="admin-login.html"><span class="nav-icon">↪</span><span>ออกจากระบบ</span></a></aside>
 <main class="content">
 <div class="page-head">
 <div>
@@ -140,6 +140,10 @@
 <option value="EXECUTIVE">ผู้บริหาร</option>
 </select>
 </label>
+<label class="full" id="supervisorField">หัวหน้างานผู้ดูแล
+        <select id="editSupervisorUserId"><option value="">เลือกหัวหน้างาน</option></select>
+        <small>จำเป็นสำหรับผู้ปฏิบัติงาน และเปลี่ยนภายหลังได้จากหน้าจัดทีม</small>
+</label>
 </div>
 <div class="dialog-actions">
 <button class="btn tertiary" id="cancelUserBtn" type="button">ยกเลิก</button>
@@ -149,9 +153,9 @@
 </dialog>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="assets/js/config.js?v=R05S01"></script>
-<script src="assets/js/ui-alerts.js?v=R05S01"></script>
-<script src="assets/js/api.js?v=R05S01"></script>
-<script src="assets/js/admin-users.js?v=R05S01"></script>
+<script src="assets/js/config.js?v=R05S07"></script>
+<script src="assets/js/ui-alerts.js?v=R05S07"></script>
+<script src="assets/js/api.js?v=R05S07"></script>
+<script src="assets/js/admin-users.js?v=R05S07"></script>
 </body>
 </html>
