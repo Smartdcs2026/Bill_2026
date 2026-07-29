@@ -1,262 +1,52 @@
-(()=>{const $=id=>document.getElementById(id);let data={assignments:[],readOnlyStatuses:[]},all=[],shown=[],drafts=new Map(),openId=null,selectedDate='',cursor=new Date(),loading=false,timer=0,onlineVerified=false,syncing=false,posReasons=[];const ro=['SUBMITTED','UNDER_REVIEW','APPROVED','NOT_PAYABLE','PAID','CLOSED'];const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const timeout=(p,ms,label)=>Promise.race([Promise.resolve(p),new Promise((_,r)=>setTimeout(()=>r(new Error(`${label}ใช้เวลานานเกินไป`)),ms))]);const dateOf=a=>String(a.workDate||a.work_date||a.date||a.store?.workDate||'').slice(0,10);const dateLabel=v=>{if(!v)return'ทุกวันที่มีงาน';const[y,m,d]=v.split('-').map(Number);return new Intl.DateTimeFormat('th-TH',{weekday:'short',day:'numeric',month:'short',year:'numeric'}).format(new Date(y,m-1,d))};const monthLabel=d=>new Intl.DateTimeFormat('th-TH',{month:'long',year:'numeric'}).format(d);const brand=a=>(String(a.store?.brand||a.brand||'RI').match(/[A-Za-z0-9]+/)?.[0]||'RI').toUpperCase().slice(0,3);const posCodes=a=>Array.isArray(a.store?.posCodes)&&a.store.posCodes.length?a.store.posCodes:Array.from({length:Math.max(1,Number(a.store?.posCount||a.store?.pos||1))},(_,i)=>`POS${i+1}`);const draft=a=>drafts.get(a.id)||{assignmentId:a.id,pos:{},notes:''};const isRO=a=>(data.readOnlyStatuses||ro).includes(a.status);const userKey=()=>{try{const u=JSON.parse(localStorage.getItem('csi_user')||'null');return u?.id||u?.employeeCode||u?.employee_code||'field'}catch{return'field'}};const setConnection=(mode,text)=>{const b=$('connectionBar');if(!b)return;b.className=`connection-bar ${mode}`;$('connectionText').textContent=text};const status=s=>({ASSIGNED:'ยังไม่เริ่ม',DRAFT:'กำลังทำ',SUBMITTED:'ส่งแล้ว',UNDER_REVIEW:'กำลังตรวจ',APPROVED:'อนุมัติแล้ว',NOT_PAYABLE:'ไม่อนุมัติ',PAID:'จ่ายแล้ว',CLOSED:'ปิดงาน'})[s]||s||'ยังไม่เริ่ม';
-const reasonByCode=code=>posReasons.find(x=>String(x.code)===String(code));const completedPos=v=>{if(v?.mode==='DATA')return customerNumberValid(v.customerCount)&&Boolean(v.billDate)&&Boolean(v.billTime);if(v?.mode==='REASON'){const r=reasonByCode(v.reasonCode);return Boolean(r)&&(!r.requiresNote||Boolean(String(v.reasonNote||'').trim()))}return false};
-const retryDelay=count=>Math.min(15*60*1000,Math.max(15000,15000*Math.pow(2,Math.max(0,Number(count||0)-1))));const retryReady=q=>!q.nextRetryAt||Date.now()>=new Date(q.nextRetryAt).getTime();const queueTypeLabel=t=>({IMAGE_UPLOAD:'รูปภาพ',LOCATION_UPDATE:'พิกัด',SUBMISSION:'ส่งงาน'})[t]||t||'ข้อมูล';
-
-
-async function pendingSummary(){
- const [queue,allDrafts]=await Promise.all([LocalDraftDB.listQueue(),LocalDraftDB.listDrafts()]);
- const pending=(queue||[]).filter(q=>q.state!=='DONE');
- const failed=pending.filter(q=>q.state==='FAILED');
- const waiting=failed.filter(q=>!retryReady(q));
- const ready=(allDrafts||[]).filter(d=>d.state==='READY_TO_SUBMIT');
- return {pending:pending.length,failed:failed.length,waiting:waiting.length,ready:ready.length,assignmentIds:[...new Set([...pending.map(q=>q.assignmentId),...ready.map(d=>d.assignmentId)].filter(Boolean))]};
-}
-async function refreshSyncStatus(){
- try{
-  const s=await pendingSummary();
-  if(s.pending||s.ready)setConnection(navigator.onLine?'pending':'local',`มีข้อมูลรอส่ง ${s.pending+s.ready} รายการ`);
-  return s;
- }catch{return {pending:0,ready:0,assignmentIds:[]}}
-}
-
-async function hydrate(){try{const x=await timeout(LocalDraftDB.listDrafts(),5000,'การเปิดข้อมูล');drafts=new Map((x||[]).map(v=>[v.assignmentId,v]))}catch(e){console.warn(e);drafts=new Map()}}
-function apply(){shown=selectedDate?all.filter(a=>dateOf(a)===selectedDate):all.slice();$('selectedDateLabel').textContent=dateLabel(selectedDate);$('listTitle').textContent=selectedDate?'งานในวันที่เลือก':'รายการงาน';$('listSubtitle').textContent=selectedDate?`${shown.length} งานในวันที่เลือก`:'แตะรายการเพื่อเริ่มหรือทำงานต่อ';render();summary()}
-function summary(){$('totalJobs').textContent=shown.length;$('draftJobs').textContent=shown.filter(a=>!isRO(a)&&(drafts.has(a.id)||['ASSIGNED','DRAFT'].includes(a.status))).length;$('sentJobs').textContent=shown.filter(isRO).length;const ds=$('draftStatus');if(ds){ds.textContent=drafts.size?`บันทึกไว้ ${drafts.size} งาน`:'บันทึกแล้ว';ds.classList.toggle('hidden',!drafts.size)};const dates=new Set(all.map(dateOf).filter(Boolean));$('calendarBadge').textContent=dates.size;$('calendarBadge').classList.toggle('hidden',!dates.size)}
-function render(){$('jobList').innerHTML=shown.length?shown.map((a,i)=>card(a,i)).join(''):`<div class="empty"><span class="empty-icon">▦</span><b>${selectedDate?'ไม่มีงานในวันที่เลือก':'ยังไม่พบงานที่ได้รับมอบหมาย'}</b><span>${selectedDate?'เลือกวันอื่นจากปฏิทินด้านบน':'กดอัปเดตงานเพื่อตรวจสอบแผนล่าสุด'}</span><button type="button" data-empty-action="refresh">อัปเดตงาน</button></div>`}
-function card(a,i){const s=a.store||{},d=draft(a),expanded=openId===a.id,readonly=isRO(a),total=posCodes(a).length,done=posCodes(a).filter(p=>completedPos(d.pos?.[p]||{})).length,cls=readonly?'sent':drafts.has(a.id)?'draft':'',txt=readonly?status(a.status):d.state==='READY_TO_SUBMIT'?'พร้อมส่ง':drafts.has(a.id)?'บันทึกไว้':'ยังไม่เริ่ม';return `<article class="store ${expanded?'open':''}" data-id="${esc(a.id)}"><button class="store-row" data-action="toggle"><span class="brand">${esc(brand(a))}</span><span class="store-info"><b>${i+1}. ${esc(s.storeName||'ไม่ระบุชื่อร้าน')}</b><small>${esc(s.storeCode||'-')} · ${total} POS${dateOf(a)?` · ${esc(dateLabel(dateOf(a)))}`:''}</small></span><span class="status ${cls}">${esc(txt)} · ${done}/${total}</span><span class="chev">${expanded?'▲':'▼'}</span></button>${expanded?panel(a,d,readonly):''}</article>`}
-function panel(a,d,readonly){const s=a.store||{},loc=d.location||{};return `<div class="panel"><div class="quick"><span><b>${esc(s.businessType||'-')} · ${esc(s.openTime||'-')}–${esc(s.closeTime||'-')}</b><small>${esc(s.address||'ไม่ระบุที่อยู่')}</small></span><button class="map" data-action="map">แผนที่</button></div><div class="location-box"><span><b>${a.locationUpdateRequested?'มีคำขอให้อัปเดตพิกัดร้าน':'พิกัดหน้าร้าน'}</b><small>${loc.latitude?`บันทึกล่าสุด ${esc(new Date(loc.capturedAt).toLocaleString('th-TH'))}`:'กดเพื่อบันทึกพิกัด ณ จุดที่อยู่ตอนนี้'}</small></span><button data-action="location">บันทึกพิกัดปัจจุบัน</button></div><div class="sub"><b>ข้อมูลจากบิล</b><span>ยอดลูกค้า · วันที่ · เวลา</span></div><div class="pos-list">${posCodes(a).map(p=>posLine(d,p,readonly)).join('')}</div><button class="pos-mismatch" data-action="pos-mismatch" ${readonly?'disabled':''}>แจ้งจำนวนหรือรหัส POS ไม่ตรงหน้างาน</button><label class="note">หมายเหตุ<textarea data-field="notes" ${readonly?'disabled':''}>${esc(d.notes||'')}</textarea></label><div class="sub"><b>รูปภาพประกอบ</b><span>เก็บในโทรศัพท์จนกว่าจะส่ง</span></div><div class="photos">${photoGroup(a,'RECEIPT','รูปบิล','receipt',readonly)}${photoGroup(a,'STORE','รูปร้าน','store',readonly)}</div><div class="actions"><button class="save" data-action="save" ${readonly?'disabled':''}>บันทึกไว้ก่อน</button><button class="submit" data-action="submit" ${readonly?'disabled':''}>ตรวจและส่งงาน</button></div>${readonly?'<div class="readonly">งานนี้ส่งแล้ว เปิดดูได้แต่แก้ไข เพิ่ม หรือลบข้อมูลไม่ได้</div>':''}</div>`}
-function posLine(d,p,readonly){const v=d.pos?.[p]||{},mode=v.mode||'',reason=reasonByCode(v.reasonCode),needsNote=Boolean(reason?.requiresNote);const reasonOptions=['<option value="">เลือกเหตุผล</option>',...posReasons.map(r=>`<option value="${esc(r.code)}" ${v.reasonCode===r.code?'selected':''}>${esc(r.label)}</option>`)].join('');return `<div class="pos pos-mode-${esc(mode.toLowerCase()||'empty')}"><div class="pos-title"><strong>${esc(p)}</strong><small>${completedPos(v)?'ครบแล้ว':'ต้องดำเนินการ'}</small></div><label class="pos-choice"><span>วิธีบันทึก</span><select data-pos="${esc(p)}" data-key="mode" ${readonly?'disabled':''}><option value="">เลือก</option><option value="DATA" ${mode==='DATA'?'selected':''}>กรอกข้อมูลจากบิล</option><option value="REASON" ${mode==='REASON'?'selected':''}>ไม่มีข้อมูล — เลือกเหตุผล</option></select></label><div class="pos-data-fields"><label><span>ยอดลูกค้า</span><input data-pos="${esc(p)}" data-key="customerCount" inputmode="numeric" value="${esc(v.customerCount||'')}" ${readonly?'disabled':''}></label><label><span>วันที่ในบิล</span><input data-pos="${esc(p)}" data-key="billDate" type="date" value="${esc(v.billDate||'')}" ${readonly?'disabled':''}></label><label><span>เวลาในบิล</span><input data-pos="${esc(p)}" data-key="billTime" type="time" step="1" value="${esc(v.billTime||'')}" ${readonly?'disabled':''}></label></div><div class="pos-reason-fields"><label><span>เหตุผล</span><select data-pos="${esc(p)}" data-key="reasonCode" ${readonly?'disabled':''}>${reasonOptions}</select></label><label class="reason-note ${needsNote?'required':''}"><span>รายละเอียด${needsNote?' *':''}</span><input data-pos="${esc(p)}" data-key="reasonNote" value="${esc(v.reasonNote||'')}" placeholder="${needsNote?'กรุณาระบุเหตุผล':'หมายเหตุเพิ่มเติม (ไม่บังคับ)'}" ${readonly?'disabled':''}></label></div></div>`}
-function requiredCount(a,cat){return 1}
-
-function photoGroup(a,cat,title,key,readonly){
- const min=requiredCount(a,cat);
- return `<div class="photo">
-  <div class="photo-head">
-   <span><b>${title}</b><small>อย่างน้อย ${min} รูป</small></span>
-   <span id="${key}Count-${esc(a.id)}">0/${min} รูป</span>
-  </div>
-  <div id="${key}Preview-${esc(a.id)}" class="photo-preview"></div>
-  <div class="photo-actions">
-   <button data-action="${key}Camera" ${readonly?'disabled':''}>ถ่ายรูป</button>
-   <button data-action="${key}Gallery" ${readonly?'disabled':''}>เลือกรูป</button>
-  </div>
-  <input class="hidden-file ${key}Camera" type="file" accept="image/*" capture="environment" data-category="${cat}">
-  <input class="hidden-file ${key}Gallery" type="file" accept="image/*" multiple data-category="${cat}">
- </div>`;
-}
-function collect(a){const root=document.querySelector(`.store[data-id="${CSS.escape(String(a.id))}"]`),d=draft(a);d.pos=d.pos||{};root?.querySelectorAll('[data-pos]').forEach(el=>{const p=el.dataset.pos;d.pos[p]=d.pos[p]||{};d.pos[p][el.dataset.key]=el.value});d.notes=root?.querySelector('[data-field="notes"]')?.value||'';return d}
-async function save(a,notify=true){const d=collect(a);await LocalDraftDB.saveDraft(d);drafts.set(a.id,await LocalDraftDB.getDraft(a.id)||d);render();summary();if(openId===a.id)setTimeout(()=>photoCounts(a),20);if(notify)await UI.success('บันทึกไว้แล้ว','กลับมาแก้ไขต่อได้')}
-function imageThumb(img,readonly){
- const url=URL.createObjectURL(img.blob);
- return `<figure class="evidence-thumb" data-image-id="${esc(img.id)}">
-  <img src="${url}" alt="${esc(img.category==='RECEIPT'?'รูปบิล':'รูปร้าน')}">
-  ${readonly?'':`<button type="button" data-action="deleteImage" data-image-id="${esc(img.id)}" aria-label="ลบรูป">×</button>`}
- </figure>`;
-}
-async function photoCounts(a){
- const imgs=await LocalDraftDB.listImages(a.id);
- const receipt=imgs.filter(x=>x.category==='RECEIPT');
- const store=imgs.filter(x=>x.category==='STORE');
- const readonly=isRO(a);
- const receiptMin=requiredCount(a,'RECEIPT');
- const storeMin=requiredCount(a,'STORE');
-
- const rc=$(`receiptCount-${a.id}`);
- const sc=$(`storeCount-${a.id}`);
- if(rc){
-  rc.textContent=`${receipt.length}/${receiptMin} รูป`;
-  rc.classList.toggle('complete',receipt.length>=receiptMin);
- }
- if(sc){
-  sc.textContent=`${store.length}/${storeMin} รูป`;
-  sc.classList.toggle('complete',store.length>=storeMin);
- }
-
- const rp=$(`receiptPreview-${a.id}`);
- const sp=$(`storePreview-${a.id}`);
- if(rp)rp.innerHTML=receipt.length?receipt.map(x=>imageThumb(x,readonly)).join(''):'<span class="photo-empty">ยังไม่มีรูป</span>';
- if(sp)sp.innerHTML=store.length?store.map(x=>imageThumb(x,readonly)).join(''):'<span class="photo-empty">ยังไม่มีรูป</span>';
-}
-async function addFiles(a,files,cat){
- const added=[];
- try{
-  for(const f of files){
-   const id=crypto.randomUUID();
-   await LocalDraftDB.saveImage({id,assignmentId:a.id,name:f.name,type:f.type,size:f.size,blob:f,category:cat,state:'LOCAL_ONLY',createdAt:new Date().toISOString()});
-   try{await LocalDraftDB.enqueue({type:'IMAGE_UPLOAD',assignmentId:a.id,imageId:id});added.push(id)}catch(err){await LocalDraftDB.deleteImage(id);throw err}
-  }
-  await save(a,false);await photoCounts(a);await refreshSyncStatus();await UI.success('เพิ่มรูปแล้ว',`${files.length} รูป`);
- }catch(e){
-  for(const id of added)await LocalDraftDB.deleteImageSafely(id).catch(()=>{});
-  const quota=e?.name==='QuotaExceededError'||/quota|storage|space/i.test(String(e?.message||''));
-  await photoCounts(a);await refreshSyncStatus();
-  await UI.error(quota?'พื้นที่โทรศัพท์ไม่เพียงพอ':'เพิ่มรูปไม่สำเร็จ',quota?'กรุณาเพิ่มพื้นที่ว่าง แล้วเลือกรูปใหม่อีกครั้ง':'ระบบยกเลิกรายการที่เพิ่มไม่ครบแล้ว ข้อมูลเดิมยังอยู่ตามปกติ');
- }
-}
-function customerNumberValid(value){
- return /^\d+$/.test(String(value||''))&&Number(value)>=0;
-}
-async function reportPosMismatch(a){const type=prompt('ระบุประเภท: POS_ADDED, POS_REMOVED, POS_CODE_MISMATCH, UNPLANNED_POS หรือ PLANNED_POS_NOT_FOUND','POS_ADDED');if(!type)return;const actual=prompt('จำนวน POS ที่พบจริง (เว้นว่างได้)',String(posCodes(a).length));const codes=prompt('รหัส POS ที่พบ คั่นด้วยเครื่องหมายจุลภาค',posCodes(a).join(','));const note=prompt('อธิบายรายละเอียดที่พบ','');if(!note)return UI.error('ข้อมูลไม่ครบ','กรุณาระบุรายละเอียด');await Api.request('/api/field/pos-change-request',{method:'POST',body:JSON.stringify({assignmentId:a.id,requestType:type.trim().toUpperCase(),actualPosCount:actual?Number(actual):null,posCodes:String(codes||'').split(',').map(x=>x.trim()).filter(Boolean),note})});return UI.success('ส่งคำขอแล้ว','Admin จะตรวจสอบและปรับข้อมูล POS ให้เหมาะสม')}
-async function validateBeforeSubmit(a){const d=await LocalDraftDB.getDraft(a.id),missing=[],invalid=[];for(const p of posCodes(a)){const v=d?.pos?.[p]||{};if(!v.mode)missing.push(`${p}: เลือกกรอกข้อมูลหรือเหตุผล`);else if(v.mode==='DATA'){if(!v.customerCount||!v.billDate||!v.billTime)missing.push(`${p}: กรอกข้อมูลจากบิลให้ครบ`);else if(!customerNumberValid(v.customerCount))invalid.push(`${p}: ยอดลูกค้าต้องเป็นจำนวนเต็ม`)}else if(v.mode==='REASON'){const r=reasonByCode(v.reasonCode);if(!r)missing.push(`${p}: เลือกเหตุผล`);else if(r.requiresNote&&!String(v.reasonNote||'').trim())missing.push(`${p}: กรอกรายละเอียดเหตุผล`)}else missing.push(`${p}: รูปแบบข้อมูลไม่ถูกต้อง`)}const imgs=await LocalDraftDB.listImages(a.id),receiptCount=imgs.filter(x=>x.category==='RECEIPT').length,storeCount=imgs.filter(x=>x.category==='STORE').length;return {d,missing,invalid,receiptCount,storeCount,receiptMin:1,storeMin:1,completed:posCodes(a).length-missing.length-invalid.length,total:posCodes(a).length}}
-
-
-async function captureLocation(a){
- if(!navigator.geolocation)return UI.error('อุปกรณ์ไม่รองรับพิกัด','กรุณาเปิดจากโทรศัพท์ที่รองรับตำแหน่ง');
- UI.loading('กำลังอ่านพิกัดปัจจุบัน…');
- try{
-  const pos=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:20000,maximumAge:0}));
-  const loc={id:crypto.randomUUID(),assignmentId:a.id,latitude:pos.coords.latitude,longitude:pos.coords.longitude,accuracy:pos.coords.accuracy,capturedAt:new Date(pos.timestamp||Date.now()).toISOString(),state:'QUEUED'};
-  await LocalDraftDB.saveLocation(loc);await LocalDraftDB.enqueue({type:'LOCATION_UPDATE',assignmentId:a.id,locationId:loc.id});
-  const d=collect(a);d.location=loc;await LocalDraftDB.saveDraft(d);drafts.set(a.id,d);render();summary();setTimeout(()=>photoCounts(a),20);
-  await refreshSyncStatus();await UI.success('บันทึกพิกัดแล้ว','เก็บไว้ในโทรศัพท์และรอส่งเข้าระบบ');
- }catch(e){await UI.error('บันทึกพิกัดไม่สำเร็จ',e?.code===1?'กรุณาอนุญาตสิทธิ์ตำแหน่งให้แอป':'ไม่สามารถอ่านพิกัดได้ กรุณาลองอีกครั้ง')}finally{UI.close()}
-}
-async function requireOnlineLogin(reason){
- try{await Api.verifySession({force:true});onlineVerified=true;setConnection('online','ยืนยันตัวตนออนไลน์แล้ว');return true}catch(e){
-  localStorage.setItem('csi_login_return','field.html');localStorage.setItem('csi_login_reason',reason||'ยืนยันตัวตนเพื่อเชื่อมต่อระบบ');
-  await UI.info('ต้องเข้าสู่ระบบอีกครั้ง',reason||'กรุณาสแกน QR และกรอกรหัสก่อนเชื่อมต่อระบบ');location.href='login.html';return false
- }
-}
-
-
-function blobToBase64(blob){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result||'').split(',')[1]||'');r.onerror=()=>reject(r.error||new Error('อ่านรูปไม่สำเร็จ'));r.readAsDataURL(blob)})}
-async function sha256Blob(blob){const b=await blob.arrayBuffer();const h=await crypto.subtle.digest('SHA-256',b);return [...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,'0')).join('')}
-async function processQueue(assignmentId){
- const items=(await LocalDraftDB.listQueue()).filter(q=>q.assignmentId===assignmentId&&q.state!=='DONE'&&retryReady(q)).sort((a,b)=>String(a.createdAt).localeCompare(String(b.createdAt)));
- let done=0;
- for(const q of items){
-  await LocalDraftDB.updateQueue(q.id,{state:'PROCESSING',lastError:null});
-  try{
-   if(q.type==='IMAGE_UPLOAD'){
-    const img=await LocalDraftDB.getImage(q.imageId);if(!img)throw new Error('ไม่พบรูปในโทรศัพท์');
-    await LocalDraftDB.updateImage(img.id,{state:'UPLOADING'});
-    const checksum=img.checksum||await sha256Blob(img.blob);
-    const result=await Api.request('/api/field/image-upload',{method:'POST',body:JSON.stringify({imageId:img.id,assignmentId:img.assignmentId,category:img.category,fileName:img.name||`${img.id}.jpg`,mimeType:img.type||'image/jpeg',size:img.size||img.blob.size,checksum,dataBase64:await blobToBase64(img.blob),capturedAt:img.createdAt})});
-    await LocalDraftDB.updateImage(img.id,{state:'VERIFIED',checksum,serverFileId:result.fileId||'',uploadedAt:new Date().toISOString()});
-   }else if(q.type==='LOCATION_UPDATE'){
-    const loc=await LocalDraftDB.getLocation(q.locationId);if(!loc)throw new Error('ไม่พบพิกัดในโทรศัพท์');
-    await Api.request('/api/field/location',{method:'POST',body:JSON.stringify(loc)});
-    await LocalDraftDB.updateLocation(loc.id,{state:'SYNCED',syncedAt:new Date().toISOString()});
-   }
-   await LocalDraftDB.updateQueue(q.id,{state:'DONE',completedAt:new Date().toISOString()});done++;
-   setConnection('online',`กำลังส่งข้อมูล ${done}/${items.length}`);
-  }catch(e){
-   const retryCount=Number(q.retryCount||0)+1;await LocalDraftDB.updateQueue(q.id,{state:'FAILED',lastError:e.message||String(e),retryCount,nextRetryAt:new Date(Date.now()+retryDelay(retryCount)).toISOString(),lastAttemptAt:new Date().toISOString()});
-   if(q.imageId)await LocalDraftDB.updateImage(q.imageId,{state:'FAILED'});
-   throw e;
-  }
- }
- return {done,total:items.length};
-}
-async function syncPending(options={}){
- if(syncing)return {skipped:true};
- if(!navigator.onLine)throw new Error('อุปกรณ์ยังไม่ได้เชื่อมต่ออินเทอร์เน็ต');
- const token=localStorage.getItem('csi_session_token');
- if(!token)throw new Error('กรุณาเข้าสู่ระบบก่อนส่งข้อมูล');
- syncing=true;
- const silent=Boolean(options.silent);
- try{
-  const state=await pendingSummary();
-  if(!state.assignmentIds.length){
-   if(!silent)setConnection('online','ออนไลน์ · ไม่มีข้อมูลรอส่ง');
-   return {total:0,success:0,failed:0};
-  }
-  let success=0,failed=0;const errors=[];
-  for(const assignmentId of state.assignmentIds){
-   const a=all.find(x=>String(x.id)===String(assignmentId));
-   if(!a)continue;
-   try{
-    setConnection('syncing',`กำลังซิงก์งาน ${success+failed+1}/${state.assignmentIds.length}`);
-    await processQueue(assignmentId);
-    const remainingForAssignment=(await LocalDraftDB.listQueue()).filter(q=>String(q.assignmentId)===String(assignmentId)&&q.state!=='DONE');if(remainingForAssignment.length)throw new Error('ยังมีข้อมูลรอส่งตามรอบลองใหม่');
-    const d=await LocalDraftDB.getDraft(assignmentId);
-    if(d?.state==='READY_TO_SUBMIT')await finalizeSubmission(a,d);
-    success++;
-   }catch(e){failed++;errors.push({assignmentId,message:e.message||String(e)});}
-  }
-  await hydrate();render();summary();
-  const remain=await pendingSummary();
-  if(remain.pending||remain.ready)setConnection('pending',`ส่งแล้วบางส่วน · ยังเหลือ ${remain.pending+remain.ready} รายการ`);
-  else setConnection('online',`ซิงก์สำเร็จ · ${new Date().toLocaleString('th-TH')}`);
-  return {total:state.assignmentIds.length,success,failed,errors,remaining:remain.pending+remain.ready};
- }finally{syncing=false}
-}
-
-async function finalizeSubmission(a,d){
- const images=await LocalDraftDB.listImages(a.id);
- const payload={assignmentId:a.id,pos:d.pos||{},notes:d.notes||'',location:d.location||null,imageIds:images.filter(x=>x.state==='VERIFIED').map(x=>x.id),validatedAt:d.validatedAt||new Date().toISOString(),clientSubmissionId:d.clientSubmissionId||crypto.randomUUID()};
- const result=await Api.request('/api/field/submit',{method:'POST',body:JSON.stringify(payload)});
- const submitted={...d,state:'SUBMITTED',submittedAt:new Date().toISOString(),clientSubmissionId:payload.clientSubmissionId,serverSubmissionId:result.submissionId||''};
- await LocalDraftDB.saveDraft(submitted);drafts.set(a.id,submitted);const queue=await LocalDraftDB.listQueue();for(const q of queue.filter(x=>x.assignmentId===a.id&&x.state==='DONE'))await LocalDraftDB.removeQueue(q.id);
- a.status='SUBMITTED';render();summary();if(openId===a.id)setTimeout(()=>photoCounts(a),20);
- return result;
-}
-
-async function submit(a){
- await save(a,false);
- const check=await validateBeforeSubmit(a);
-
- if(check.missing.length){
-  return UI.error('ข้อมูลยังไม่ครบ',`ดำเนินการทุกแถว POS ให้ครบ:<br>${check.missing.map(esc).join('<br>')}`);
- }
- if(check.invalid.length){
-  return UI.error('ยอดลูกค้าไม่ถูกต้อง',`${check.invalid.map(esc).join('<br>')}`);
- }
- if(check.receiptCount<check.receiptMin||check.storeCount<check.storeMin){
-  const need=[];
-  if(check.receiptCount<check.receiptMin)need.push(`รูปบิล ${check.receiptCount}/${check.receiptMin}`);
-  if(check.storeCount<check.storeMin)need.push(`รูปร้าน ${check.storeCount}/${check.storeMin}`);
-  return UI.error('รูปภาพยังไม่ครบ',`กรุณาเพิ่ม ${need.join(' และ ')}`);
- }
-
- const c=await UI.confirm(
-  'ยืนยันความพร้อมของงาน?',
-  `POS ครบ ${check.completed}/${check.total} แถว · รูปบิล ${check.receiptCount} รูป · รูปร้าน ${check.storeCount} รูป หลังส่งแล้วผู้ปฏิบัติงานจะแก้ไขไม่ได้`,
-  'ยืนยันพร้อมส่ง'
- );
- if(c.isConfirmed){
-  if(!(await requireOnlineLogin('กรุณาเข้าสู่ระบบก่อนส่งข้อมูลงาน')))return;
-  const d={...check.d,state:'READY_TO_SUBMIT',validatedAt:new Date().toISOString(),clientSubmissionId:check.d.clientSubmissionId||crypto.randomUUID()};
-  await LocalDraftDB.saveDraft(d);drafts.set(a.id,d);render();summary();if(openId===a.id)setTimeout(()=>photoCounts(a),20);
-  UI.loading('กำลังส่งข้อมูลงาน…');
-  try{const progress=await processQueue(a.id);await finalizeSubmission(a,d);await UI.success('ส่งงานสำเร็จ',`ส่งรูปและพิกัดครบแล้ว${progress.total?` ${progress.total} รายการ`:''} รูปต้นฉบับยังอยู่ในโทรศัพท์`)}catch(e){setConnection('local','ส่งไม่ครบ · ระบบเก็บข้อมูลไว้ในโทรศัพท์');await UI.error('ส่งงานยังไม่สำเร็จ',`${e.message||'การเชื่อมต่อขัดข้อง'} ข้อมูลและรูปยังอยู่ในโทรศัพท์ สามารถกดส่งอีกครั้งได้`)}finally{UI.close()}
- }
-}
-
-
-function ensureSyncCenter(){
- if(document.getElementById('syncCenterSheet'))return;
- const menu=document.querySelector('#menuSheet .menu');
- if(menu&&!document.getElementById('syncCenterBtn')){const b=document.createElement('button');b.id='syncCenterBtn';b.type='button';b.textContent='ศูนย์ตรวจสอบการส่งข้อมูล';menu.insertBefore(b,menu.querySelector('.danger'));b.onclick=()=>{closeSheet('menuSheet');openSyncCenter()}}
- const wrap=document.createElement('div');wrap.id='syncCenterSheet';wrap.className='overlay hidden';wrap.innerHTML=`<section class="sheet sync-center"><div class="handle"></div><header><span><small>OFFLINE DELIVERY</small><h2>ศูนย์ตรวจสอบการส่งข้อมูล</h2></span><button id="closeSyncCenterBtn" type="button">×</button></header><div id="syncCenterSummary" class="sync-center-summary"></div><div id="syncCenterList" class="sync-center-list"></div><div class="sync-center-actions"><button id="retryFailedBtn" type="button">ลองส่งรายการที่ผิดพลาดอีกครั้ง</button><button id="repairQueueBtn" type="button" class="secondary">ตรวจซ่อมคิวส่งข้อมูล</button><button id="backupLocalBtn" type="button" class="secondary">สำรองรายการในเครื่อง</button><button id="restoreLocalBtn" type="button" class="secondary">กู้คืนจากไฟล์สำรอง</button><input id="restoreLocalInput" type="file" accept="application/json,.json" hidden></div></section>`;document.body.appendChild(wrap);wrap.onclick=e=>{if(e.target===wrap)closeSheet('syncCenterSheet')};document.getElementById('closeSyncCenterBtn').onclick=()=>closeSheet('syncCenterSheet');document.getElementById('retryFailedBtn').onclick=retryFailedNow;document.getElementById('repairQueueBtn').onclick=repairLocalQueue;document.getElementById('backupLocalBtn').onclick=backupLocalData;document.getElementById('restoreLocalBtn').onclick=()=>document.getElementById('restoreLocalInput').click();document.getElementById('restoreLocalInput').onchange=restoreLocalData;
-}
-async function openSyncCenter(){ensureSyncCenter();const [queue,storage,counts]=await Promise.all([LocalDraftDB.listQueue(),LocalDraftDB.storageStatus().catch(()=>({usage:0,quota:0,persisted:false})),LocalDraftDB.localCounts().catch(()=>({drafts:0,images:0,locations:0,queue:0}))]);const active=(queue||[]).filter(q=>q.state!=='DONE').sort((a,b)=>String(b.updatedAt||'').localeCompare(String(a.updatedAt||'')));const failed=active.filter(q=>q.state==='FAILED');const mb=n=>`${(Number(n||0)/1048576).toFixed(1)} MB`;document.getElementById('syncCenterSummary').innerHTML=`<span><b>${active.length}</b><small>รอส่ง</small></span><span><b>${failed.length}</b><small>ผิดพลาด</small></span><span><b>${storage.quota?Math.round(storage.usage/storage.quota*100):0}%</b><small>พื้นที่เครื่อง</small></span><span><b>${storage.persisted?'ปลอดภัย':'ทั่วไป'}</b><small>การเก็บข้อมูล</small></span><span><b>${counts.drafts}</b><small>งานในเครื่อง</small></span><span><b>${counts.images}</b><small>รูปต้นฉบับ</small></span>`;document.getElementById('syncCenterList').innerHTML=active.length?active.map(q=>`<article><span><b>${queueTypeLabel(q.type)} · ${esc(q.assignmentId||'-')}</b><small>${q.state==='FAILED'?esc(q.lastError||'ส่งไม่สำเร็จ'):'รอส่งเข้าระบบ'}${q.nextRetryAt?` · ลองใหม่ ${esc(new Date(q.nextRetryAt).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}))}`:''}</small></span><em class="${String(q.state).toLowerCase()}">${esc(q.state)}</em></article>`).join(''):`<div class="sync-center-empty">ไม่มีข้อมูลค้างส่งในโทรศัพท์</div>`;document.getElementById('retryFailedBtn').disabled=!failed.length;openSheet('syncCenterSheet')}
-async function backupLocalData(){try{const snapshot=await LocalDraftDB.exportSnapshot(userKey());const blob=new Blob([JSON.stringify(snapshot,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`RetailInsight_Backup_${new Date().toISOString().replace(/[:.]/g,'-')}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);await UI.success('สำรองข้อมูลแล้ว','ไฟล์นี้เป็นรายการตรวจสอบและกู้ข้อมูลข้อความ โดยรูปต้นฉบับยังคงอยู่ในโทรศัพท์')}catch(e){await UI.error('สำรองข้อมูลไม่สำเร็จ',e.message||'ไม่สามารถสร้างไฟล์สำรองได้')}}
-async function restoreLocalData(e){
- const input=e?.target,file=input?.files?.[0];if(!file)return;
- try{
-  const text=await file.text();let snapshot;try{snapshot=JSON.parse(text)}catch{throw new Error('ไฟล์นี้ไม่ใช่ JSON ที่ถูกต้อง')}
-  if(snapshot?.format!=='RetailInsightLocalBackup'||Number(snapshot?.version)!==1)throw new Error('ไม่ใช่ไฟล์สำรองของ RetailInsight รุ่นที่รองรับ');
-  if(String(snapshot?.userKey||'')!==String(userKey()))throw new Error('ไฟล์สำรองนี้เป็นของผู้ใช้งานคนอื่น จึงไม่สามารถนำเข้าบัญชีนี้ได้');
-  const c=await UI.confirm('กู้คืนข้อมูลจากไฟล์สำรอง?','ระบบจะรวมข้อมูลที่ใหม่กว่าเข้ากับข้อมูลในโทรศัพท์ โดยไม่ลบรูปต้นฉบับและไม่เขียนทับข้อมูลที่ใหม่กว่า','กู้คืนข้อมูล');if(!c.isConfirmed)return;
-  UI.loading('กำลังกู้คืนข้อมูลในเครื่อง…');const r=await LocalDraftDB.importSnapshot(snapshot,userKey());await hydrate();const cached=await LocalDraftDB.getAssignments(userKey());if(cached?.items?.length)all=cached.items;apply();await refreshSyncStatus();await openSyncCenter();
-  await UI.success('กู้คืนข้อมูลเรียบร้อย',`งานร่าง ${r.drafts} · พิกัด ${r.locations} · คิวส่ง ${r.queue}${r.skippedQueue?` · ข้ามคิวรูปที่ไม่มีไฟล์ ${r.skippedQueue}`:''}`);
- }catch(err){await UI.error('กู้คืนข้อมูลไม่สำเร็จ',err.message||'ไม่สามารถอ่านไฟล์สำรองได้')}finally{if(input)input.value='';UI.close()}
-}
-async function repairLocalQueue(){const c=await UI.confirm('ตรวจซ่อมคิวส่งข้อมูล?','ระบบจะลบเฉพาะรายการคิวซ้ำและประวัติที่ส่งสำเร็จนานเกิน 7 วัน โดยไม่ลบงานหรือรูปต้นฉบับ','ตรวจซ่อม');if(!c.isConfirmed)return;try{const r=await LocalDraftDB.repairQueue();await openSyncCenter();await refreshSyncStatus();await UI.success('ตรวจซ่อมเรียบร้อย',`ลบคิวซ้ำ ${r.removedDuplicates} รายการ · ลบคิวรูปที่ไม่มีไฟล์ ${r.removedMissingImages||0} รายการ · ล้างประวัติเก่า ${r.removedDone} รายการ`)}catch(e){await UI.error('ตรวจซ่อมไม่สำเร็จ',e.message||'ข้อมูลในเครื่องยังคงอยู่ตามเดิม')}}
-async function retryFailedNow(){if(!(await requireOnlineLogin('กรุณาเข้าสู่ระบบก่อนลองส่งข้อมูลอีกครั้ง')))return;await LocalDraftDB.resetFailedQueue();closeSheet('syncCenterSheet');UI.loading('กำลังลองส่งข้อมูลอีกครั้ง…');try{const r=await syncPending();if(r.failed)await UI.error('ยังส่งได้ไม่ครบ',`สำเร็จ ${r.success} งาน · เหลือ ${r.failed} งาน`);else await UI.success('ส่งข้อมูลสำเร็จ','รายการที่ค้างถูกส่งเรียบร้อยแล้ว')}catch(e){await UI.error('ยังส่งไม่สำเร็จ',e.message||'กรุณาลองอีกครั้ง')}finally{UI.close();refreshSyncStatus()}}
-
-$('jobList').onclick=async e=>{const emptyAction=e.target.closest('[data-empty-action]')?.dataset.emptyAction;if(emptyAction==='refresh'){if(await requireOnlineLogin('กรุณาเข้าสู่ระบบก่อนอัปเดตรายการงาน'))load(true);return}const c=e.target.closest('.store');if(!c)return;const a=all.find(x=>String(x.id)===c.dataset.id),act=e.target.closest('[data-action]')?.dataset.action;if(!a||!act)return;if(act==='toggle'){openId=openId===a.id?null:a.id;render();if(openId)setTimeout(()=>{document.querySelector(`.store[data-id="${CSS.escape(String(a.id))}"]`)?.scrollIntoView({behavior:'smooth',block:'start'});photoCounts(a)},50)}if(act==='map'){const s=a.store||{},q=s.latitude&&s.longitude?`${s.latitude},${s.longitude}`:encodeURIComponent(s.address||s.storeName||'');open(`https://www.google.com/maps/search/?api=1&query=${q}`,'_blank')}if(act==='save')await save(a);if(act==='location')await captureLocation(a);if(act==='submit')await submit(a);if(act==='deleteImage'){const id=e.target.closest('[data-image-id]')?.dataset.imageId;if(id){const confirm=await UI.confirm('ลบรูปนี้?','รูปจะถูกลบออกจากโทรศัพท์','ลบรูป');if(confirm.isConfirmed){const r=await LocalDraftDB.deleteImageSafely(id);await photoCounts(a);await refreshSyncStatus();await UI.success('ลบรูปแล้ว',r?.removedQueue?'ลบรายการรอส่งของรูปนี้แล้วด้วย':'')}}}if(['receiptCamera','receiptGallery','storeCamera','storeGallery'].includes(act))c.querySelector(`.${act}`)?.click()}
-$('jobList').onchange=async e=>{const c=e.target.closest('.store');if(!c)return;const a=all.find(x=>String(x.id)===c.dataset.id);if(!a)return;if(e.target.matches('.hidden-file')){await addFiles(a,[...e.target.files],e.target.dataset.category);e.target.value='';return}if(e.target.matches('select[data-pos]')){await save(a,false);render();setTimeout(()=>photoCounts(a),20)}}
-$('jobList').oninput=e=>{const c=e.target.closest('.store');if(!c)return;const a=all.find(x=>String(x.id)===c.dataset.id);clearTimeout(timer);$('draftStatus').textContent='กำลังบันทึก…';timer=setTimeout(async()=>{try{await save(a,false);$('draftStatus').textContent='บันทึกแล้ว'}catch{$('draftStatus').textContent='กดบันทึกไว้ก่อน'}},650)}
-
-function counts(){const m=new Map();all.forEach(a=>{const d=dateOf(a);if(d)m.set(d,(m.get(d)||0)+1)});return m}
-function renderCalendar(){const y=cursor.getFullYear(),m=cursor.getMonth(),first=new Date(y,m,1),start=first.getDay(),last=new Date(y,m+1,0).getDate(),prev=new Date(y,m,0).getDate(),map=counts(),cells=[];$('calendarMonthLabel').textContent=monthLabel(cursor);for(let i=0;i<42;i++){let d,mm=m,yy=y,out=false;if(i<start){d=prev-start+i+1;mm=m-1;out=true}else if(i>=start+last){d=i-start-last+1;mm=m+1;out=true}else d=i-start+1;const dt=new Date(yy,mm,d),key=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`,n=map.get(key)||0;cells.push(`<button class="day ${out?'out':''} ${n?'work':''} ${selectedDate===key?'selected':''}" data-date="${key}"><strong>${d}</strong>${n?`<i class="dot"></i><em>${n} ร้าน</em>`:''}</button>`)}$('calendarGrid').innerHTML=cells.join('')}
-function openSheet(id){$(id).classList.remove('hidden');document.body.style.overflow='hidden'}function closeSheet(id){$(id).classList.add('hidden');document.body.style.overflow=''}
-$('calendarBtn').onclick=()=>{const d=selectedDate||all.map(dateOf).find(Boolean);if(d){const[y,m]=d.split('-').map(Number);cursor=new Date(y,m-1,1)}renderCalendar();openSheet('calendarSheet')};$('closeCalendarBtn').onclick=()=>closeSheet('calendarSheet');$('prevMonthBtn').onclick=()=>{cursor=new Date(cursor.getFullYear(),cursor.getMonth()-1,1);renderCalendar()};$('nextMonthBtn').onclick=()=>{cursor=new Date(cursor.getFullYear(),cursor.getMonth()+1,1);renderCalendar()};$('showAllDatesBtn').onclick=()=>{selectedDate='';closeSheet('calendarSheet');apply()};$('calendarGrid').onclick=e=>{const b=e.target.closest('[data-date]');if(!b)return;selectedDate=b.dataset.date;closeSheet('calendarSheet');apply()};$('menuBtn').onclick=()=>openSheet('menuSheet');$('refreshBtn').onclick=async()=>{closeSheet('menuSheet');if(await requireOnlineLogin('กรุณาเข้าสู่ระบบก่อนอัปเดตรายการงาน'))load(true)};$('syncBtn').onclick=async()=>{if(!(await requireOnlineLogin('กรุณาเข้าสู่ระบบก่อนซิงก์ข้อมูล')))return;UI.loading('กำลังซิงก์ข้อมูลที่รอส่ง…');try{const r=await syncPending();await load(true);if(r.failed)await UI.error('ซิงก์ได้บางส่วน',`สำเร็จ ${r.success} งาน · ยังไม่สำเร็จ ${r.failed} งาน ข้อมูลยังอยู่ในโทรศัพท์`);else await UI.success('ซิงก์เรียบร้อย',r.total?`ส่งข้อมูลสำเร็จ ${r.success} งาน`:'ไม่มีข้อมูลรอส่ง')}catch(e){await UI.error('ซิงก์ไม่สำเร็จ',e.message||'กรุณาลองอีกครั้ง')}finally{UI.close()}};$('showDraftBtn').onclick=()=>{closeSheet('menuSheet');const id=[...drafts.keys()][0];if(!id)return UI.info('ยังไม่มีงานที่บันทึกไว้','เริ่มกรอกข้อมูลร้านก่อน');const a=all.find(x=>x.id===id);selectedDate=dateOf(a);openId=id;apply();setTimeout(()=>document.querySelector(`.store[data-id="${CSS.escape(String(id))}"]`)?.scrollIntoView({behavior:'smooth'}),50)};$('logoutBtn').onclick=async()=>{closeSheet('menuSheet');const c=await UI.confirm('ออกจากระบบ?','ข้อมูลที่บันทึกไว้ในโทรศัพท์จะยังคงอยู่','ออกจากระบบ');if(c.isConfirmed){localStorage.removeItem('csi_session_token');localStorage.removeItem('csi_user');location.href='login.html'}};document.querySelectorAll('.overlay').forEach(o=>o.onclick=e=>{if(e.target===o)closeSheet(o.id)});
-
-async function load(forceOnline=false){if(loading)return;loading=true;if(forceOnline)UI.loading('กำลังอัปเดตงาน…');try{let cachedUser=null;try{cachedUser=JSON.parse(localStorage.getItem('csi_user')||'null')}catch{}if(cachedUser?.displayName)$('userName').textContent=cachedUser.displayName;await hydrate();const cached=await LocalDraftDB.getAssignments(userKey());if(cached?.items?.length){all=cached.items;data={assignments:all,readOnlyStatuses:ro};apply();setConnection('local',`ทำงานในเครื่อง · แผนล่าสุด ${new Date(cached.updatedAt).toLocaleString('th-TH')}`)}
- const token=localStorage.getItem('csi_session_token');if(!token&&!forceOnline){if(!cached?.items?.length){all=[];apply();setConnection('local','ยังไม่มีแผนงานในเครื่อง กรุณาเข้าสู่ระบบเพื่ออัปเดต')}return}
- const[r,p]=await Promise.all([timeout(Api.request('/api/field/assignments'),15000,'การโหลดงาน'),timeout(Api.request('/api/field/bootstrap'),10000,'การตรวจสอบผู้ใช้').catch(()=>null)]);if(!r||!Array.isArray(r.assignments))throw new Error('ข้อมูลรายการงานไม่ถูกต้อง');if(Array.isArray(p?.posReasons))posReasons=p.posReasons;if(p?.user?.displayName){$('userName').textContent=p.user.displayName;localStorage.setItem('csi_user',JSON.stringify(p.user))}else if(!cachedUser?.displayName)$('userName').textContent='ผู้ปฏิบัติงาน';data={...r,readOnlyStatuses:Array.isArray(r.readOnlyStatuses)?r.readOnlyStatuses:ro};all=r.assignments;await LocalDraftDB.saveAssignments(all,userKey());await LocalDraftDB.setMeta('last_sync_at',new Date().toISOString());onlineVerified=true;setConnection('online',`ออนไลน์ · อัปเดตล่าสุด ${new Date().toLocaleString('th-TH')}`);setTimeout(()=>syncPending({silent:true}).catch(()=>refreshSyncStatus()),250);const d=all.map(dateOf).find(Boolean);if(d){const[y,m]=d.split('-').map(Number);cursor=new Date(y,m-1,1)}selectedDate='';openId=null;apply()}catch(e){console.error(e);const cached=await LocalDraftDB.getAssignments(userKey());if(cached?.items?.length){all=cached.items;data={assignments:all,readOnlyStatuses:ro};apply();setConnection('local','ทำงานในเครื่อง · ยังไม่ได้อัปเดตจากระบบ');if(forceOnline)await UI.error('อัปเดตงานไม่สำเร็จ','ยังใช้แผนงานที่เก็บไว้ในโทรศัพท์ได้ตามปกติ')}else{all=[];apply();setConnection('local','ไม่สามารถเชื่อมต่อระบบได้');if(forceOnline)await UI.error('โหลดงานไม่สำเร็จ',e.message||'ไม่สามารถโหลดงานได้')}}finally{UI.close();loading=false}}
-window.addEventListener('online',()=>{refreshSyncStatus();setTimeout(()=>syncPending({silent:true}).catch(()=>refreshSyncStatus()),500)});window.addEventListener('offline',()=>setConnection('local','ทำงานในเครื่อง · ข้อมูลจะส่งเมื่อออนไลน์'));
-(async()=>{ensureSyncCenter();try{if(navigator.storage?.persist)timeout(LocalDraftDB.requestPersistence(),3000,'การเตรียมพื้นที่').catch(()=>{})}catch{}await load()})()})();
+(()=>{
+ const $=id=>document.getElementById(id);
+ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const ro=['SUBMITTED','UNDER_REVIEW','APPROVED','NOT_PAYABLE','PAID','CLOSED'];
+ let data={assignments:[],readOnlyStatuses:ro,posReasons:[],notePresets:[]},all=[],shown=[],drafts=new Map(),selectedDate='',filter='ALL',openId=null,mode='POS',tab='PRIMARY',cursor=new Date(),timer=0,loading=false;
+ const timeout=(p,ms,label)=>Promise.race([Promise.resolve(p),new Promise((_,r)=>setTimeout(()=>r(new Error(`${label}ใช้เวลานานเกินไป`)),ms))]);
+ const dateOf=a=>String(a.workDate||a.work_date||a.date||a.store?.workDate||'').slice(0,10);
+ const dateLabel=v=>{if(!v)return'';const[y,m,d]=v.split('-').map(Number);return new Intl.DateTimeFormat('th-TH',{weekday:'short',day:'numeric',month:'short',year:'numeric'}).format(new Date(y,m-1,d))};
+ const monthLabel=d=>new Intl.DateTimeFormat('th-TH',{month:'long',year:'numeric'}).format(d);
+ const brand=a=>(String(a.store?.brand||a.store?.brandCode||a.brand||'RI').match(/[A-Za-z0-9]+/)?.[0]||'RI').toUpperCase().slice(0,3);
+ const posCodes=a=>Array.isArray(a.store?.posCodes)&&a.store.posCodes.length?a.store.posCodes:Array.from({length:Math.max(1,Number(a.store?.posCount||a.store?.pos||1))},(_,i)=>`P${String(i+1).padStart(2,'0')}`);
+ const isRO=a=>(data.readOnlyStatuses||ro).includes(a.status);
+ const status=s=>({ASSIGNED:'ยังไม่เริ่ม',DRAFT:'กำลังทำ',SUBMITTED:'ส่งแล้ว',UNDER_REVIEW:'กำลังตรวจ',APPROVED:'อนุมัติแล้ว',NOT_PAYABLE:'ไม่อนุมัติ',PAID:'จ่ายแล้ว',CLOSED:'ปิดงาน'})[s]||s||'ยังไม่เริ่ม';
+ const draft=a=>drafts.get(a.id)||{assignmentId:a.id,pos:{},notes:'',location:null};
+ const reqCount=(a,cat)=>{const s=a.store||{};return cat==='RECEIPT'?Math.max(1,Number(s.receiptSlots||s.receiptMin||a.receiptMin||1)):Math.max(1,Number(s.storeSlots||s.storeMin||a.storeMin||5))};
+ const defaultPos=a=>({mode:'DATA',customerCount:'',billDate:dateOf(a),billTime:''});
+ const completePos=v=>v?.mode==='DATA'?Boolean(v.customerCount&&v.billDate&&v.billTime):v?.mode==='REASON'?Boolean(v.reasonCode&&(!reasonByCode(v.reasonCode)?.requiresNote||v.reasonNote)):false;
+ const reasonByCode=code=>(data.posReasons||[]).find(x=>x.code===code);
+ async function hydrate(){try{const x=await LocalDraftDB.listDrafts();drafts=new Map((x||[]).map(v=>[v.assignmentId,v]))}catch{drafts=new Map()}}
+ function filtered(){let x=selectedDate?all.filter(a=>dateOf(a)===selectedDate):all.slice();if(filter==='DRAFT')x=x.filter(a=>!isRO(a)&&(drafts.has(a.id)||['ASSIGNED','DRAFT'].includes(a.status)));if(filter==='SENT')x=x.filter(isRO);return x}
+ function apply(){shown=filtered();document.querySelectorAll('.work-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.filter===filter));$('listTitle').textContent=filter==='ALL'?'รายการงาน':filter==='DRAFT'?'งานกำลังทำ':'งานที่ส่งแล้ว';$('listSubtitle').textContent=selectedDate?`${shown.length} ร้าน · ${dateLabel(selectedDate)}`:'แตะชื่อร้านเพื่อดูข้อมูล หรือแตะตัวย่อแบรนด์เพื่อกรอกงาน';render();summary()}
+ function summary(){const scoped=selectedDate?all.filter(a=>dateOf(a)===selectedDate):all;$('totalJobs').textContent=scoped.length;$('draftJobs').textContent=scoped.filter(a=>!isRO(a)&&(drafts.has(a.id)||['ASSIGNED','DRAFT'].includes(a.status))).length;$('sentJobs').textContent=scoped.filter(isRO).length;$('draftStatus').textContent=drafts.size?`บันทึกไว้ ${drafts.size} งาน`:'บันทึกอัตโนมัติ';const dates=new Set(all.map(dateOf).filter(Boolean));$('calendarBadge').textContent=dates.size;$('calendarBadge').classList.toggle('hidden',!dates.size)}
+ function render(){$('jobList').innerHTML=shown.length?shown.map((a,i)=>card(a,i)).join(''):`<div class="empty"><b>ไม่พบรายการงาน</b><span>ลองเปลี่ยนแท็บสถานะหรือวันที่จากปฏิทิน</span></div>`}
+ function card(a,i){const s=a.store||{},d=draft(a),expanded=openId===a.id,total=posCodes(a).length,done=posCodes(a).filter(p=>completePos(d.pos?.[p])).length,readonly=isRO(a),txt=readonly?status(a.status):done===total?'พร้อมส่ง':drafts.has(a.id)?'บันทึกไว้':'ยังไม่เริ่ม';return `<article class="store ${expanded?'open':''}" data-id="${esc(a.id)}"><div class="store-row"><button class="brand" data-action="open-pos">${esc(brand(a))}</button><button class="store-info" data-action="open-store"><b>${i+1}. ${esc(s.storeName||'ไม่ระบุชื่อร้าน')}</b><small>${esc(s.storeCode||'-')} · ${total} POS · ${esc(dateLabel(dateOf(a)))}</small></button><span class="status ${readonly?'sent':drafts.has(a.id)?'draft':''}">${esc(txt)}${done?` · ${done}/${total}`:''}</span><span class="chev">${expanded?'▲':'▼'}</span></div>${expanded?workspace(a,d,readonly):''}</article>`}
+ function tabs(){const labels=mode==='POS'?['POS','รูปบิล','หมายเหตุ']:['ข้อมูลร้าน','รูปร้าน','หมายเหตุ'];return `<nav class="context-tabs">${labels.map((x,i)=>`<button data-action="workspace-tab" data-tab="${['PRIMARY','PHOTOS','NOTES'][i]}" class="${tab===['PRIMARY','PHOTOS','NOTES'][i]?'active':''}">${x}</button>`).join('')}</nav>`}
+ function workspace(a,d,readonly){return `<section class="workspace">${tabs()}<div class="workspace-body">${tab==='PRIMARY'?(mode==='POS'?posView(a,d,readonly):storeView(a,d,readonly)):tab==='PHOTOS'?photoView(a,mode==='POS'?'RECEIPT':'STORE',readonly):noteView(a,d,readonly)}</div>${readonly?'<div class="readonly">งานนี้ส่งแล้ว เปิดดูได้อย่างเดียว</div>':`<div class="footer-actions"><button class="save" data-action="save">บันทึกไว้ก่อน</button><button class="submit" data-action="submit">ตรวจและส่งงาน</button></div>`}</section>`}
+ function posView(a,d,readonly){return `<div class="section-title"><b>ข้อมูล POS</b><small>วันที่เริ่มต้นจากแผนงาน แก้ไขได้</small></div><div class="pos-stack">${posCodes(a).map(p=>posCard(a,d,p,readonly)).join('')}</div>`}
+ function posCard(a,d,p,readonly){const v={...defaultPos(a),...(d.pos?.[p]||{})},reason=reasonByCode(v.reasonCode),done=completePos(v);return `<div class="pos-card"><div class="pos-head"><strong>${esc(p)}</strong><span class="complete">${done?'ครบแล้ว':'ยังไม่ครบ'}</span></div><div class="mode-row"><button data-action="pos-mode" data-pos="${esc(p)}" data-mode="DATA" class="${v.mode!=='REASON'?'active':''}" ${readonly?'disabled':''}>มีข้อมูลบิล</button><button data-action="pos-mode" data-pos="${esc(p)}" data-mode="REASON" class="${v.mode==='REASON'?'active':''}" ${readonly?'disabled':''}>ไม่ได้บิล</button></div>${v.mode==='REASON'?`<div class="reason-block"><select class="reason-select" data-pos="${esc(p)}" data-key="reasonCode" ${readonly?'disabled':''}><option value="">เลือกเหตุผล</option>${(data.posReasons||[]).map(r=>`<option value="${esc(r.code)}" ${v.reasonCode===r.code?'selected':''}>${esc(r.label)}</option>`).join('')}</select><input class="field-input other-note ${reason?.requiresNote?'':'hidden'}" data-pos="${esc(p)}" data-key="reasonNote" value="${esc(v.reasonNote||'')}" placeholder="กรอกรายละเอียดเพิ่มเติม" ${readonly?'disabled':''}></div>`:`<div class="data-grid"><label class="field"><span>ยอดลูกค้า</span><input data-pos="${esc(p)}" data-key="customerCount" inputmode="numeric" value="${esc(v.customerCount||'')}" ${readonly?'disabled':''}></label><label class="field"><span>วันที่ในบิล</span><input data-pos="${esc(p)}" data-key="billDate" type="date" value="${esc(v.billDate||dateOf(a))}" ${readonly?'disabled':''}></label><label class="field"><span>เวลาในบิล</span><input data-pos="${esc(p)}" data-key="billTime" type="time" step="1" value="${esc(v.billTime||'')}" ${readonly?'disabled':''}></label></div>`}</div>`}
+ function storeView(a,d,readonly){const s=a.store||{},coord=d.location?`${Number(d.location.latitude).toFixed(6)}, ${Number(d.location.longitude).toFixed(6)}`:(s.latitude&&s.longitude?`${s.latitude}, ${s.longitude}`:'ยังไม่มีพิกัด');const rows=[['Brand',s.brand||s.brandCode||'-'],['ประเภทธุรกิจ',s.businessType||'-'],['รหัสร้านสาขา',s.storeCode||'-'],['ชื่อร้านสาขา',s.storeName||'-'],['POS',posCodes(a).length],['เวลาเปิด–ปิด',`${s.openTime||'-'}–${s.closeTime||'-'}`],['ที่อยู่ร้าน',s.address||'-'],['รูปแบบร้าน',s.storeFormat||s.storeType||'-'],['Rank',s.rank||'-']];return `<div class="section-title"><b>ข้อมูลร้าน</b><small>อ่านจากแผนงาน</small></div><div class="info-card">${rows.map(x=>`<div class="info-row"><span>${esc(x[0])}</span><b>${esc(x[1])}</b><i></i></div>`).join('')}<div class="info-row"><span>พิกัดร้าน</span><b>${esc(coord)}</b><button class="gps-btn" data-action="gps" ${readonly?'disabled':''} title="ดึงพิกัดปัจจุบัน">◎</button></div></div>${d.location?'<div class="gps-state">บันทึกพิกัดจากโทรศัพท์แล้ว · ไม่บังคับส่งใหม่</div>':''}`}
+ function photoView(a,cat,readonly){const title=cat==='RECEIPT'?'รูปบิล':'รูปร้าน',count=reqCount(a,cat);return `<div class="section-title"><b>${title}</b><small>แตะช่องเพื่อถ่ายภาพหรือเลือกจาก Gallery</small></div><div class="photo-count" id="photoCount-${esc(a.id)}-${cat}">กำลังอ่านรูป…</div><div class="photo-slots" id="photoSlots-${esc(a.id)}-${cat}">${Array.from({length:count},(_,i)=>`<div class="photo-slot" data-slot="${i}"><button class="add" data-action="photo-choice" data-category="${cat}">＋<br>${title} ${i+1}</button></div>`).join('')}</div><input class="hidden-file camera-${cat}" type="file" accept="image/*" capture="environment" data-category="${cat}"><input class="hidden-file gallery-${cat}" type="file" accept="image/*" multiple data-category="${cat}">`}
+ function noteView(a,d,readonly){return `<div class="section-title"><b>หมายเหตุ</b><small>พิมพ์เองหรือเลือกข้อความที่กำหนดไว้</small></div><div class="note-wrap"><div class="note-toolbar"><textarea class="note-area" data-field="notes" placeholder="กรอกหมายเหตุเพิ่มเติม" ${readonly?'disabled':''}>${esc(d.notes||'')}</textarea><button class="preset-btn" data-action="note-preset" ${readonly?'disabled':''}>＋</button></div></div>`}
+ function collect(a){const root=document.querySelector(`.store[data-id="${CSS.escape(String(a.id))}"]`),d=draft(a);d.pos=d.pos||{};root?.querySelectorAll('[data-pos][data-key]').forEach(el=>{const p=el.dataset.pos;d.pos[p]=d.pos[p]||defaultPos(a);d.pos[p][el.dataset.key]=el.value});const note=root?.querySelector('[data-field="notes"]');if(note)d.notes=note.value;return d}
+ async function save(a,notify=true){const d=collect(a);await LocalDraftDB.saveDraft(d);drafts.set(a.id,await LocalDraftDB.getDraft(a.id)||d);render();summary();if(openId===a.id&&tab==='PHOTOS')setTimeout(()=>renderPhotos(a,mode==='POS'?'RECEIPT':'STORE'),20);if(notify)await UI.success('บันทึกไว้แล้ว','ข้อมูลยังอยู่ในโทรศัพท์และกลับมาแก้ไขต่อได้')}
+ async function renderPhotos(a,cat){const imgs=(await LocalDraftDB.listImages(a.id)).filter(x=>x.category===cat),box=$(`photoSlots-${a.id}-${cat}`),count=reqCount(a,cat),readonly=isRO(a);if(!box)return;$(`photoCount-${a.id}-${cat}`).textContent=`${imgs.length}/${count} รูป`;box.innerHTML=Array.from({length:Math.max(count,imgs.length)},(_,i)=>{const x=imgs[i];if(!x)return `<div class="photo-slot"><button class="add" data-action="photo-choice" data-category="${cat}">＋<br>${cat==='RECEIPT'?'รูปบิล':'รูปร้าน'} ${i+1}</button></div>`;const url=URL.createObjectURL(x.blob);return `<div class="photo-slot"><img src="${url}" alt="รูปประกอบ">${readonly?'':`<button class="remove" data-action="delete-image" data-image-id="${esc(x.id)}">×</button>`}</div>`}).join('')}
+ async function addFiles(a,files,cat){for(const f of files)await LocalDraftDB.saveImage({id:crypto.randomUUID(),assignmentId:a.id,name:f.name,type:f.type,size:f.size,blob:f,category:cat,state:'LOCAL',createdAt:new Date().toISOString()});await save(a,false);await renderPhotos(a,cat)}
+ async function photoChoice(a,cat){const result=await Swal.fire({title:cat==='RECEIPT'?'เพิ่มรูปบิล':'เพิ่มรูปร้าน',html:'<div class="choice-actions"><button id="takePhoto">ถ่ายภาพ</button><button id="pickGallery">Gallery</button></div>',showConfirmButton:false,showCloseButton:true,customClass:{popup:'choice-popup'},didOpen:()=>{document.getElementById('takePhoto').onclick=()=>{Swal.close();document.querySelector(`.store[data-id="${CSS.escape(String(a.id))}"] .camera-${cat}`)?.click()};document.getElementById('pickGallery').onclick=()=>{Swal.close();document.querySelector(`.store[data-id="${CSS.escape(String(a.id))}"] .gallery-${cat}`)?.click()}}});return result}
+ async function gps(a){if(!navigator.geolocation)return UI.error('โทรศัพท์ไม่รองรับ GPS','ไม่สามารถดึงพิกัดได้');UI.loading('กำลังดึงพิกัด…');navigator.geolocation.getCurrentPosition(async p=>{UI.close();const d=collect(a);d.location={id:crypto.randomUUID(),latitude:p.coords.latitude,longitude:p.coords.longitude,accuracy:p.coords.accuracy,capturedAt:new Date().toISOString()};await LocalDraftDB.saveDraft(d);drafts.set(a.id,d);render();await UI.success('บันทึกพิกัดแล้ว',`${p.coords.latitude.toFixed(6)}, ${p.coords.longitude.toFixed(6)}`)},async e=>{UI.close();await UI.error('ดึงพิกัดไม่สำเร็จ',e.message||'กรุณาเปิดสิทธิ์ตำแหน่ง')},{enableHighAccuracy:true,timeout:12000,maximumAge:0})}
+ async function notePreset(a){const s=a.store||{},items=[...(data.notePresets||[]),...(s.storeNote?[s.storeNote]:[])].filter(Boolean);if(!items.length)return UI.info('ยังไม่มีหมายเหตุสำเร็จรูป','พิมพ์หมายเหตุเองได้ หรือให้ Admin เพิ่มรายการในภายหลัง');const {value}=await Swal.fire({title:'เลือกหมายเหตุ',input:'select',inputOptions:Object.fromEntries(items.map((x,i)=>[i,x])),showCancelButton:true,confirmButtonText:'เพิ่ม',cancelButtonText:'ยกเลิก'});if(value===undefined)return;const root=document.querySelector(`.store[data-id="${CSS.escape(String(a.id))}"]`),ta=root?.querySelector('[data-field="notes"]');if(ta){ta.value=[ta.value,items[Number(value)]].filter(Boolean).join('\n');ta.dispatchEvent(new Event('input',{bubbles:true}))}}
+ async function validate(a){const d=collect(a),missing=[];for(const p of posCodes(a)){const v={...defaultPos(a),...(d.pos?.[p]||{})};if(!completePos(v))missing.push(p)}const imgs=await LocalDraftDB.listImages(a.id),rc=imgs.filter(x=>x.category==='RECEIPT').length,sc=imgs.filter(x=>x.category==='STORE').length;return{d,missing,rc,sc,rmin:reqCount(a,'RECEIPT'),smin:reqCount(a,'STORE')}}
+ async function submit(a){await save(a,false);const x=await validate(a);if(x.missing.length)return UI.error('ข้อมูล POS ยังไม่ครบ',`กรอกข้อมูลหรือเลือก “ไม่ได้บิล” ให้ครบ: ${x.missing.join(', ')}`);if(x.rc<x.rmin||x.sc<x.smin)return UI.error('รูปภาพยังไม่ครบ',`รูปบิล ${x.rc}/${x.rmin} · รูปร้าน ${x.sc}/${x.smin}`);const c=await UI.confirm('ตรวจข้อมูลครบแล้ว','ระบบจะบันทึกสถานะพร้อมส่งไว้ในโทรศัพท์ก่อน','ยืนยันพร้อมส่ง');if(c.isConfirmed){x.d.state='READY_TO_SUBMIT';x.d.validatedAt=new Date().toISOString();await LocalDraftDB.saveDraft(x.d);drafts.set(a.id,x.d);render();summary();await UI.success('พร้อมส่งแล้ว','กดอัปเดตงานเมื่อมีอินเทอร์เน็ตเพื่อส่งข้อมูลขึ้นระบบ')}}
+ $('jobList').onclick=async e=>{const root=e.target.closest('.store');if(!root)return;const a=all.find(x=>String(x.id)===root.dataset.id),act=e.target.closest('[data-action]')?.dataset.action;if(!a||!act)return;if(act==='open-pos'||act==='open-store'){openId=a.id;mode=act==='open-pos'?'POS':'STORE';tab='PRIMARY';render();setTimeout(()=>root.scrollIntoView({behavior:'smooth',block:'start'}),30)}else if(act==='workspace-tab'){tab=e.target.closest('[data-tab]').dataset.tab;render();if(tab==='PHOTOS')setTimeout(()=>renderPhotos(a,mode==='POS'?'RECEIPT':'STORE'),10)}else if(act==='pos-mode'){const d=collect(a),p=e.target.dataset.pos;d.pos[p]={...defaultPos(a),...(d.pos[p]||{}),mode:e.target.dataset.mode};await LocalDraftDB.saveDraft(d);drafts.set(a.id,d);render()}else if(act==='photo-choice')await photoChoice(a,e.target.closest('[data-category]').dataset.category);else if(act==='delete-image'){const c=await UI.confirm('ลบรูปนี้?','รูปจะถูกลบออกจากโทรศัพท์','ลบรูป');if(c.isConfirmed){await LocalDraftDB.deleteImage(e.target.dataset.imageId);await renderPhotos(a,mode==='POS'?'RECEIPT':'STORE')}}else if(act==='gps')await gps(a);else if(act==='note-preset')await notePreset(a);else if(act==='save')await save(a);else if(act==='submit')await submit(a)};
+ $('jobList').onchange=async e=>{const root=e.target.closest('.store');if(!root)return;const a=all.find(x=>String(x.id)===root.dataset.id);if(e.target.matches('.hidden-file')){await addFiles(a,[...e.target.files],e.target.dataset.category);e.target.value=''}else if(e.target.matches('[data-key="reasonCode"]')){const d=collect(a),p=e.target.dataset.pos;d.pos[p]=d.pos[p]||defaultPos(a);d.pos[p].reasonCode=e.target.value;await LocalDraftDB.saveDraft(d);drafts.set(a.id,d);render()}};
+ $('jobList').oninput=e=>{const root=e.target.closest('.store');if(!root)return;const a=all.find(x=>String(x.id)===root.dataset.id);clearTimeout(timer);$('draftStatus').textContent='กำลังบันทึก…';timer=setTimeout(async()=>{try{await save(a,false);$('draftStatus').textContent='บันทึกแล้ว'}catch{$('draftStatus').textContent='กดบันทึกไว้ก่อน'}},500)};
+ document.querySelector('.work-tabs').onclick=e=>{const b=e.target.closest('[data-filter]');if(!b)return;filter=b.dataset.filter;openId=null;apply()};
+ function counts(){const m=new Map();all.forEach(a=>{const d=dateOf(a);if(d)m.set(d,(m.get(d)||0)+1)});return m}
+ function renderCalendar(){const y=cursor.getFullYear(),m=cursor.getMonth(),first=new Date(y,m,1),start=first.getDay(),last=new Date(y,m+1,0).getDate(),prev=new Date(y,m,0).getDate(),map=counts(),cells=[];$('calendarMonthLabel').textContent=monthLabel(cursor);for(let i=0;i<42;i++){let d,mm=m,out=false;if(i<start){d=prev-start+i+1;mm=m-1;out=true}else if(i>=start+last){d=i-start-last+1;mm=m+1;out=true}else d=i-start+1;const dt=new Date(y,mm,d),key=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`,n=map.get(key)||0;cells.push(`<button class="day ${out?'out':''} ${n?'work':''} ${selectedDate===key?'selected':''}" data-date="${key}"><strong>${d}</strong>${n?`<i class="dot"></i><em>${n} ร้าน</em>`:''}</button>`)}$('calendarGrid').innerHTML=cells.join('')}
+ function openSheet(id){$(id).classList.remove('hidden');document.body.style.overflow='hidden'}function closeSheet(id){$(id).classList.add('hidden');document.body.style.overflow=''}
+ $('calendarBtn').onclick=()=>{renderCalendar();openSheet('calendarSheet')};$('closeCalendarBtn').onclick=()=>closeSheet('calendarSheet');$('prevMonthBtn').onclick=()=>{cursor=new Date(cursor.getFullYear(),cursor.getMonth()-1,1);renderCalendar()};$('nextMonthBtn').onclick=()=>{cursor=new Date(cursor.getFullYear(),cursor.getMonth()+1,1);renderCalendar()};$('showAllDatesBtn').onclick=()=>{selectedDate='';closeSheet('calendarSheet');apply()};$('calendarGrid').onclick=e=>{const b=e.target.closest('[data-date]');if(!b)return;selectedDate=b.dataset.date;closeSheet('calendarSheet');apply()};$('menuBtn').onclick=()=>openSheet('menuSheet');$('refreshBtn').onclick=$('refreshTopBtn').onclick=()=>{closeSheet('menuSheet');load()};$('showDraftBtn').onclick=()=>{closeSheet('menuSheet');filter='DRAFT';apply()};$('logoutBtn').onclick=async()=>{closeSheet('menuSheet');const c=await UI.confirm('ออกจากระบบ?','ข้อมูลที่บันทึกไว้ในโทรศัพท์จะยังคงอยู่','ออกจากระบบ');if(c.isConfirmed){localStorage.removeItem('csi_session_token');localStorage.removeItem('csi_user');location.href='login.html'}};document.querySelectorAll('.overlay').forEach(o=>o.onclick=e=>{if(e.target===o)closeSheet(o.id)});
+ async function load(){if(loading)return;loading=true;UI.loading('กำลังโหลดงาน…');try{let cached=null;try{cached=JSON.parse(localStorage.getItem('csi_user')||'null')}catch{}if(cached?.displayName)$('userName').textContent=cached.displayName;const[r,p]=await Promise.all([timeout(Api.request('/api/field/assignments'),15000,'การโหลดงาน'),timeout(Api.request('/api/field/bootstrap'),10000,'การตรวจสอบผู้ใช้').catch(()=>null)]);if(!r||!Array.isArray(r.assignments))throw new Error('ข้อมูลรายการงานไม่ถูกต้อง');if(p?.user?.displayName){$('userName').textContent=p.user.displayName;localStorage.setItem('csi_user',JSON.stringify(p.user))}data={...r,...(p||{}),readOnlyStatuses:r.readOnlyStatuses||ro,posReasons:p?.posReasons||[]};all=r.assignments;await hydrate();const d=all.map(dateOf).find(Boolean);if(d){const[y,m]=d.split('-').map(Number);cursor=new Date(y,m-1,1)}selectedDate='';filter='ALL';openId=null;$('syncText').textContent=navigator.onLine?'● พร้อมใช้งาน · ข้อมูลบันทึกในโทรศัพท์':'● ออฟไลน์ · ข้อมูลยังอยู่ในโทรศัพท์';apply()}catch(e){console.error(e);all=[];apply();const u=/401|unauthorized|กรุณาเข้าสู่ระบบ/i.test(e.message||'');await UI.error(u?'กรุณาเข้าสู่ระบบใหม่':'โหลดงานไม่สำเร็จ',u?'ข้อมูลการเข้าสู่ระบบหมดอายุ':e.message||'ไม่สามารถโหลดงานได้');if(u)location.href='login.html'}finally{UI.close();loading=false}}
+ window.addEventListener('online',()=>{$('syncText').textContent='● กลับมาออนไลน์แล้ว · กดอัปเดตงาน'});window.addEventListener('offline',()=>{$('syncText').textContent='● ออฟไลน์ · ข้อมูลยังอยู่ในโทรศัพท์'});
+ (async()=>{try{navigator.storage?.persist?.()}catch{}await load()})();
+})();
