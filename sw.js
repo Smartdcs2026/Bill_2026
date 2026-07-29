@@ -1,8 +1,5 @@
-const CACHE='retailinsight-r05-s04';
-const ASSETS=['./','login.html','field.html','admin.html','assets/css/app.css','assets/css/admin-console.css','assets/js/config.js','assets/js/api.js','assets/js/login.js',
-  './admin-user-month-import.html','./assets/js/admin-user-month-import.js',
-  './deployment-check.html',
-  './assets/js/deployment-check.js'];
-self.addEventListener('install',event=>{self.skipWaiting();event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)));});
-self.addEventListener('activate',event=>{event.waitUntil(Promise.all([caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key)))),self.clients.claim()]));});
-self.addEventListener('fetch',event=>{if(event.request.method!=='GET')return;const url=new URL(event.request.url);if(url.origin===location.origin&&(url.pathname.endsWith('.html')||url.pathname.includes('/assets/'))){event.respondWith(fetch(event.request,{cache:'no-store'}).then(response=>{const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(event.request,copy));return response;}).catch(()=>caches.match(event.request)));return;}event.respondWith(fetch(event.request).catch(()=>caches.match(event.request)));});
+const CACHE='retailinsight-field-r05-s05-v1';
+const ASSETS=['./','login.html','field.html','assets/css/field-workspace.css','assets/js/config.js','assets/js/api.js','assets/js/ui-alerts.js','assets/js/date-th.js','assets/js/local-draft-db.js','assets/js/field-workspace.js'];
+self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)))});
+self.addEventListener('activate',e=>{e.waitUntil(Promise.all([self.clients.claim(),caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))]))});
+self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(e.request).then(r=>{const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));return r}).catch(()=>caches.match(e.request)))});
