@@ -26,5 +26,12 @@
 
 .store{scroll-margin-top:128px}.reason-label{font-size:12px;font-weight:850;color:#344054}.inline-reason{grid-template-columns:104px 1fr;align-items:center;margin-top:8px}.inline-reason .other-note{grid-column:2}.field-input{width:100%;border:1px solid #cbd6e5;border-radius:9px;background:#fff;padding:9px;font-size:12px;min-height:42px}
 
-/* Submission progress — production field workflow */
-.submit-progress{padding:8px 4px 2px;text-align:left}.submit-progress #submitStep{font-weight:800;font-size:1.02rem;color:#17233d;margin-bottom:10px}.submit-progress small{display:block;margin-top:10px;color:#60708a}.submit-bar{height:10px;border-radius:999px;background:#e7edf7;overflow:hidden}.submit-bar i{display:block;width:0;height:100%;border-radius:inherit;background:#1673e6;transition:width .2s ease}.store .status.draft{color:#9a6500}.store .status.sent{color:#087a45}.footer-actions .submit:disabled{opacity:.55;cursor:not-allowed}
+
+/* SPRINT 15: submitted work visual state */
+.store.submitted{border-color:#a8d9bb;background:#f7fcf9}
+.store.submitted .store-row{background:#f7fcf9}
+.brand.submitted-brand{background:linear-gradient(180deg,#8fd6aa 0%,#62bd83 100%);color:#0b4f2b;text-shadow:none}
+.store.submitted .store-info{background:#f7fcf9}
+.store.submitted .chev{color:#3d8b5c}
+.store.submitting{pointer-events:none;opacity:.78}
+.store.submitting .status{background:#e8f2ff;color:#1769dc}
