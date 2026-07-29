@@ -652,3 +652,58 @@ dialog{border-radius:14px;width:min(550px,calc(100% - 20px))}
  .team-management-page .team-move-grid,
  .image-settings-page .settings-grid {grid-template-columns:1fr;}
 }
+
+/* R05-S11 — complete admin controls and batched import progress */
+.team-management-page input:not([type]),
+.team-management-page input[type="text"],
+.team-management-page input[type="search"],
+.team-management-page input[type="date"],
+.team-management-page input[type="number"],
+.team-management-page select,
+.team-management-page textarea {
+  -webkit-appearance:none;
+  appearance:none;
+  width:100%;
+  min-width:0;
+  min-height:42px;
+  padding:9px 12px;
+  border:1px solid #c7d4e5;
+  border-radius:10px;
+  background:#fff;
+  color:#10213c;
+  font-family:inherit;
+  font-size:13px;
+  font-weight:500;
+  line-height:1.35;
+  box-sizing:border-box;
+  outline:none;
+}
+.team-management-page select {
+  padding-right:38px;
+  background-image:linear-gradient(45deg,transparent 50%,#52657d 50%),linear-gradient(135deg,#52657d 50%,transparent 50%);
+  background-position:calc(100% - 17px) 18px,calc(100% - 12px) 18px;
+  background-size:5px 5px,5px 5px;
+  background-repeat:no-repeat;
+}
+.team-management-page input[type="date"]{padding-right:8px;color-scheme:light}
+.team-management-page input::placeholder,
+.team-management-page textarea::placeholder{color:#8a98aa;opacity:1}
+.team-management-page input:hover,
+.team-management-page select:hover,
+.team-management-page textarea:hover{border-color:#98b4d8}
+.team-management-page input:focus,
+.team-management-page select:focus,
+.team-management-page textarea:focus{border-color:#1975df;box-shadow:0 0 0 3px rgba(25,117,223,.13)}
+.team-management-page .team-directory-tools{align-items:end}
+.team-management-page .team-search-box{min-width:0}
+.team-management-page .team-move-panel-new{background:#f8fbff;border:1px solid #d2deec;padding:14px;border-radius:13px}
+.team-management-page .team-bulk-section:not(.has-selection){display:none}
+.team-management-page .team-bulk-section.has-selection{display:block}
+.team-management-page .btn{min-height:40px;border-radius:10px;font-family:inherit;font-weight:800}
+.team-management-page .worker-directory-card{min-height:68px}
+.import-progress-copy{font-weight:800;color:#24415f;margin-bottom:10px}
+.import-progress-track{height:10px;border-radius:999px;background:#e7edf5;overflow:hidden;margin:8px 0 10px}
+.import-progress-track span{display:block;height:100%;border-radius:inherit;background:#1975df;transition:width .2s ease}
+@media(max-width:720px){
+ .team-management-page input:not([type]),.team-management-page input,.team-management-page select,.team-management-page textarea{font-size:16px}
+}
