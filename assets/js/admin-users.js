@@ -1,6 +1,7 @@
 (()=>{
 const $=id=>document.getElementById(id);
 let users=[];
+let supervisors=[];
 let actionUserId=null;
 let actionAnchor=null;
 
@@ -21,6 +22,8 @@ async function guard(){
   throw e;
  }
 }
+
+async function loadSupervisors(){const d=await Api.request('/api/admin/workplan-template/options');supervisors=d.supervisors||[];$('editSupervisorUserId').innerHTML='<option value="">เลือกหัวหน้างาน</option>'+supervisors.map(x=>`<option value="${esc(x.id)}">${esc(x.displayName)} — ${esc(x.employeeCode||'-')}</option>`).join('')}
 
 async function loadUsers(){
  closeActionMenu();
@@ -107,6 +110,8 @@ function openUser(u=null){
  $('editEmployeeCode').value=u?.employeeCode||'';
  $('editPassword').value='';
  $('editRoleCode').value=u?.roleCode||'FIELD_USER';
+ $('editSupervisorUserId').value=u?.supervisorUserId||'';
+ toggleSupervisorField();
  $('userDialogTitle').textContent=u?'แก้ไขผู้ใช้งาน':'เพิ่มผู้ใช้งาน';
  $('userDialog').showModal();
  setTimeout(()=>$('editDisplayName').focus(),80);
@@ -122,7 +127,8 @@ async function saveUser(){
   username:$('editUsername').value.trim().toLowerCase(),
   employeeCode:$('editEmployeeCode').value.trim(),
   password:$('editPassword').value,
-  roleCode:$('editRoleCode').value
+  roleCode:$('editRoleCode').value,
+  supervisorUserId:$('editSupervisorUserId').value
  };
 
  if(!payload.displayName){
@@ -133,6 +139,8 @@ async function saveUser(){
   await UI.error('Username ไม่ถูกต้อง','ใช้ตัวอักษรอังกฤษพิมพ์เล็ก ตัวเลข จุด ขีดกลาง หรือขีดล่าง อย่างน้อย 3 ตัว');
   $('editUsername').focus();return;
  }
+ if(payload.roleCode==='FIELD_USER'&&!payload.employeeCode){await UI.error('ข้อมูลไม่ครบ','ผู้ปฏิบัติงานต้องมีรหัสพนักงาน');$('editEmployeeCode').focus();return}
+ if(payload.roleCode==='FIELD_USER'&&!payload.supervisorUserId){await UI.error('ข้อมูลไม่ครบ','กรุณาเลือกหัวหน้างานผู้ดูแล');$('editSupervisorUserId').focus();return}
  if(['ADMIN','REVIEWER'].includes(payload.roleCode)&&!id&&!/^(?=.*[A-Za-z])(?=.*\d).{10,}$/.test(payload.password)){
   await UI.error('รหัสผ่านไม่ถูกต้อง','Admin และหัวหน้างานต้องมีรหัสผ่านอย่างน้อย 10 ตัว และมีทั้งตัวอักษรกับตัวเลข');
   $('editPassword').focus();return;
@@ -301,5 +309,8 @@ window.addEventListener('resize',closeActionMenu);
 window.addEventListener('scroll',closeActionMenu,true);
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeActionMenu()});
 
-guard().then(loadUsers);
+function toggleSupervisorField(){const isField=$('editRoleCode').value==='FIELD_USER';$('supervisorField').style.display=isField?'':'none';$('editSupervisorUserId').disabled=!isField}
+$('editRoleCode').addEventListener('change',toggleSupervisorField);
+guard().then(async()=>{await loadSupervisors();await loadUsers();toggleSupervisorField()});
 })();
+
