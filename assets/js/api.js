@@ -312,12 +312,23 @@
          * ไม่ควรลบ Token และไม่ควรบังคับ Login ใหม่
          */
         if(verified && verified.user){
-          throw makeError(
-            error.message || 'ไม่มีสิทธิ์ดำเนินการส่วนนี้',
-            error.code || 'FORBIDDEN',
-            error.status || 403,
-            error.details
-          );
+          /*
+           * Session ยังใช้ได้: ลองส่งคำขอเดิมซ้ำหนึ่งครั้งด้วย Token ล่าสุด
+           * ป้องกัน 401 ชั่วคราวจากหน้า/Service Worker คนละเวอร์ชันหรือ Worker cold start
+           */
+          try{
+            return await fetchJson(path, options);
+          }catch(retryError){
+            if(isAuthError(retryError)){
+              throw makeError(
+                'สิทธิ์การเข้าสู่ระบบไม่ตรงกับคำขอนี้ กรุณาออกจากระบบแล้วเข้าสู่ระบบใหม่',
+                retryError.code || 'UNAUTHORIZED',
+                retryError.status || 401,
+                retryError.details
+              );
+            }
+            throw retryError;
+          }
         }
       }
 
