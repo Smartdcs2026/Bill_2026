@@ -567,3 +567,5 @@ dialog{border-radius:14px;width:min(550px,calc(100% - 20px))}
 /* note preset section support */
 .section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 18px;border-bottom:1px solid #e2e8f0}.section-head h2{margin:0;font-size:18px}.section-head p{margin:4px 0 0;color:#667085;font-size:12px}
 @media(max-width:720px){.section-head{align-items:flex-start;flex-direction:column}.section-head .btn{width:100%}.reason-admin-row{grid-template-columns:38px minmax(0,1fr) auto}.reason-admin-row .btn{grid-row:2}.reason-admin-row .reason-state{grid-column:3}}
+
+.employee-code-badge{display:inline-flex;margin-left:8px;padding:2px 8px;border-radius:999px;background:#eaf2ff;color:#145fc4;font-style:normal;font-size:12px;font-weight:800;vertical-align:middle}.worker-choice input:disabled+span{opacity:.58}.worker-choice small{display:block;margin-top:4px;color:#607089}
