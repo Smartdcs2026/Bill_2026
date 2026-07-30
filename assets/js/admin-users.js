@@ -117,6 +117,15 @@ function openUser(u=null){
  setTimeout(()=>$('editDisplayName').focus(),80);
 }
 
+
+async function showDialogValidation_(title,message,focusId){
+ const dialog=$('userDialog');
+ if(dialog.open)dialog.close();
+ await UI.error(title,message);
+ if(!dialog.open)dialog.showModal();
+ setTimeout(()=>$(focusId)?.focus(),80);
+}
+
 let savingUser=false;
 async function saveUser(){
  if(savingUser)return;
@@ -132,18 +141,15 @@ async function saveUser(){
  };
 
  if(!payload.displayName){
-  await UI.error('ข้อมูลไม่ครบ','กรุณากรอกชื่อผู้ใช้งาน');
-  $('editDisplayName').focus();return;
+  await showDialogValidation_('ข้อมูลไม่ครบ','กรุณากรอกชื่อผู้ใช้งาน','editDisplayName');return;
  }
  if(!/^[a-z0-9._-]{3,80}$/.test(payload.username)){
-  await UI.error('Username ไม่ถูกต้อง','ใช้ตัวอักษรอังกฤษพิมพ์เล็ก ตัวเลข จุด ขีดกลาง หรือขีดล่าง อย่างน้อย 3 ตัว');
-  $('editUsername').focus();return;
+  await showDialogValidation_('Username ไม่ถูกต้อง','ใช้ตัวอักษรอังกฤษพิมพ์เล็ก ตัวเลข จุด ขีดกลาง หรือขีดล่าง อย่างน้อย 3 ตัว','editUsername');return;
  }
- if(payload.roleCode==='FIELD_USER'&&!payload.employeeCode){await UI.error('ข้อมูลไม่ครบ','ผู้ปฏิบัติงานต้องมีรหัสพนักงาน');$('editEmployeeCode').focus();return}
- if(payload.roleCode==='FIELD_USER'&&!payload.supervisorUserId){await UI.error('ข้อมูลไม่ครบ','กรุณาเลือกหัวหน้างานผู้ดูแล');$('editSupervisorUserId').focus();return}
+ if(payload.roleCode==='FIELD_USER'&&!payload.employeeCode){await showDialogValidation_('ข้อมูลไม่ครบ','ผู้ปฏิบัติงานต้องมีรหัสพนักงาน','editEmployeeCode');return}
+ if(payload.roleCode==='FIELD_USER'&&!payload.supervisorUserId){await showDialogValidation_('ข้อมูลไม่ครบ','กรุณาเลือกหัวหน้างานผู้ดูแล','editSupervisorUserId');return}
  if(['ADMIN','REVIEWER'].includes(payload.roleCode)&&!id&&!/^(?=.*[A-Za-z])(?=.*\d).{10,}$/.test(payload.password)){
-  await UI.error('รหัสผ่านไม่ถูกต้อง','Admin และหัวหน้างานต้องมีรหัสผ่านอย่างน้อย 10 ตัว และมีทั้งตัวอักษรกับตัวเลข');
-  $('editPassword').focus();return;
+  await showDialogValidation_('รหัสผ่านไม่ถูกต้อง','Admin และหัวหน้างานต้องมีรหัสผ่านอย่างน้อย 10 ตัว และมีทั้งตัวอักษรกับตัวเลข','editPassword');return;
  }
 
  savingUser=true;saveBtn.disabled=true;saveBtn.textContent='กำลังบันทึก…';
