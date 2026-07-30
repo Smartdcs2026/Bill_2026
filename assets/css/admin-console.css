@@ -707,3 +707,6 @@ dialog{border-radius:14px;width:min(550px,calc(100% - 20px))}
 @media(max-width:720px){
  .team-management-page input:not([type]),.team-management-page input,.team-management-page select,.team-management-page textarea{font-size:16px}
 }
+
+/* Sprint 20: keep alert workflow above user form by closing native dialog before alert */
+.swal2-container{z-index:2147483647!important}
