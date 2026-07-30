@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>ศูนย์ตรวจงาน | RetailInsight</title>
-<link rel="stylesheet" href="assets/css/reviewer-workspace.css?v=20260730-s20">
+<link rel="stylesheet" href="assets/css/reviewer-workspace.css?v=20260730-s21">
 </head>
 <body>
 <header class="rv-top">
   <div class="rv-brand"><span class="rv-logo">RI</span><div><strong>RetailInsight</strong><span id="reviewerName">หัวหน้างาน</span></div></div>
-  <div class="rv-top-context"><b>ศูนย์ตรวจงานส่วนกลาง</b><span>หัวหน้างานทุกคนช่วยกันตรวจได้</span></div>
+  <div class="rv-top-context"><b>ศูนย์ตรวจงานส่วนกลาง</b><span>ตรวจ แก้ไข และอนุมัติงานจากทุกทีม</span></div>
   <div class="rv-actions"><button id="refreshBtn" type="button">อัปเดต</button><button id="logoutBtn" type="button">ออกจากระบบ</button></div>
 </header>
 <main class="rv-shell">
@@ -21,18 +21,14 @@
     <div class="rv-mini-stat"><b id="mineCount">0</b><span>ฉันกำลังตรวจ</span></div>
     <div class="rv-mini-stat"><b id="othersCount">0</b><span>ผู้อื่นกำลังตรวจ</span></div>
   </section>
-
   <section class="rv-filter-panel">
-    <div class="rv-filter-row">
-      <label class="rv-search"><span>ค้นหา</span><input id="searchInput" type="search" placeholder="ชื่อผู้ปฏิบัติงาน รหัสพนักงาน ชื่อร้าน หรือรหัสร้าน"></label>
-      <label><span>ผู้ปฏิบัติงาน</span><select id="workerFilter"><option value="">ทั้งหมด</option></select></label>
-      <label><span>วันที่แผนงาน</span><input id="dateFilter" type="date"></label>
-      <button id="clearFiltersBtn" class="rv-clear" type="button">ล้างตัวกรอง</button>
-    </div>
+    <label class="rv-search"><span>ค้นหา</span><input id="searchInput" type="search" placeholder="ชื่อผู้ปฏิบัติงาน รหัสพนักงาน ชื่อร้าน หรือรหัสร้าน"></label>
+    <label><span>ผู้ปฏิบัติงาน</span><select id="workerFilter"><option value="">ทั้งหมด</option></select></label>
+    <label><span>วันที่แผนงาน</span><input id="dateFilter" type="date"></label>
+    <button id="clearFiltersBtn" class="rv-clear" type="button">ล้างตัวกรอง</button>
     <div class="rv-date-strip" id="dateStrip"></div>
     <div class="rv-list-status" id="listStatus">กำลังโหลด...</div>
   </section>
-
   <section class="rv-grid">
     <aside class="rv-list-panel">
       <div class="rv-list-head"><div><b>รายการงาน</b><span>เลือกงานเพื่อเปิดตรวจ</span></div><span id="visibleCount">0</span></div>
@@ -42,15 +38,16 @@
   </section>
 </main>
 <div id="imageViewer" class="rv-viewer hidden" role="dialog" aria-modal="true">
-  <div class="rv-viewer-toolbar"><span id="viewerCaption">รูปภาพ</span><div><button id="zoomOutBtn" type="button">−</button><button id="zoomResetBtn" type="button">100%</button><button id="zoomInBtn" type="button">+</button><button id="viewerCloseBtn" type="button">ปิด</button></div></div>
-  <button id="viewerPrevBtn" class="rv-viewer-nav prev" type="button" aria-label="รูปก่อนหน้า">‹</button>
+  <div class="rv-viewer-toolbar"><span id="viewerCaption">รูปภาพ</span><div><button id="zoomOutBtn">−</button><button id="zoomResetBtn">100%</button><button id="zoomInBtn">+</button><button id="viewerCloseBtn">ปิด</button></div></div>
+  <button id="viewerPrevBtn" class="rv-viewer-nav prev">‹</button>
   <div class="rv-viewer-stage"><img id="viewerImage" alt="หลักฐาน"></div>
-  <button id="viewerNextBtn" class="rv-viewer-nav next" type="button" aria-label="รูปถัดไป">›</button>
+  <button id="viewerNextBtn" class="rv-viewer-nav next">›</button>
   <div id="viewerCounter" class="rv-viewer-counter"></div>
 </div>
+<input id="reviewImageInput" type="file" accept="image/*" hidden>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="assets/js/config.js"></script>
-<script src="assets/js/api.js?v=20260730-s20"></script>
-<script src="assets/js/reviewer-workspace.js?v=20260730-s20"></script>
+<script src="assets/js/api.js?v=20260730-s21"></script>
+<script src="assets/js/reviewer-workspace.js?v=20260730-s21"></script>
 </body>
 </html>
