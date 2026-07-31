@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>ตรวจงาน | RetailInsight</title>
-<link id="reviewerCss" rel="stylesheet" href="assets/css/reviewer-workspace.css?v=20260731-v2-image" onload="document.documentElement.classList.add('rv-css-loaded')">
+<link id="reviewerCss" rel="stylesheet" href="assets/css/reviewer-workspace.css?v=20260731-s25-track" onload="document.documentElement.classList.add('rv-css-loaded')">
 <style id="reviewerCriticalCss">:root{--navy:#0b1830;--blue:#1477e8;--line:#d6e1ee;--bg:#edf3f9;--text:#12223a;--muted:#64748b;--green:#16834b;--amber:#9a6200;--danger:#c73535;--card:#fff}
 *{box-sizing:border-box}html,body{height:100%;overflow:hidden}body{margin:0;background:var(--bg);font-family:"Noto Sans Thai","Leelawadee UI",system-ui,sans-serif;color:var(--text)}button,input,select,textarea{font:inherit}
 .rv-top{height:62px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:8px 16px;gap:16px}.rv-brand{display:flex;align-items:center;gap:10px;min-width:210px}.rv-logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(145deg,#278cff,#0e64c9);display:grid;place-items:center;font-weight:900}.rv-brand div{display:flex;flex-direction:column}.rv-brand strong{font-size:19px}.rv-brand span{font-size:12px;color:#c8d5e8}.rv-top-tools{display:flex;align-items:center;gap:8px}.rv-top-tools>button,.rv-report-link{height:38px;border:1px solid #38506f;background:#142541;color:#fff;border-radius:9px;padding:0 13px;text-decoration:none;font-weight:700;display:grid;place-items:center}.rv-status-tabs{display:flex;height:38px;border:1px solid #38506f;border-radius:10px;overflow:hidden}.rv-status-tabs button{border:0;border-right:1px solid #38506f;background:#10213b;color:#cbd6e6;padding:0 13px}.rv-status-tabs button:last-child{border-right:0}.rv-status-tabs button.active{background:#fff;color:#143158}.rv-status-tabs b{margin-left:6px}
@@ -42,95 +42,104 @@
  .rv-list-pane{grid-template-rows:42px 1fr 38px}
  .rv-info-grid{margin-bottom:4px}.rv-info{padding:5px}.rv-section-title{margin:5px 0 4px}
 }
+
+/* Sprint 24 — image navigation and inspection controls */
+.rv-image-controls{align-items:center;flex-wrap:nowrap;overflow-x:auto;max-width:100%;scrollbar-width:thin}
+.rv-image-controls button{flex:0 0 auto;cursor:pointer;user-select:none}
+.rv-image-controls button:active{transform:translateY(1px);background:#e8f2ff}
+.rv-tool-separator{width:1px;height:24px;background:#d6e1ee;margin:0 2px;flex:0 0 auto}
+.rv-gallery-stage{touch-action:none;cursor:grab}
+.rv-gallery-stage.is-dragging{cursor:grabbing}
+.rv-gallery-stage img{will-change:transform;user-select:none;-webkit-user-drag:none;transition:transform .08s ease}
+.rv-pan-help{position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:3;background:#071224b8;color:#fff;border-radius:8px;padding:4px 8px;font-size:10px;pointer-events:none;opacity:.78;white-space:nowrap}
+.rv-gallery-stage:hover .rv-pan-help{opacity:1}
+@media(max-width:1100px){.rv-pan-help{display:none}.rv-image-controls{max-width:360px}}
+
+.hidden{display:none!important}
+.rv-top-title{display:flex;flex-direction:column;align-items:center;min-width:260px}.rv-top-title b{font-size:14px}.rv-top-title span{font-size:10px;color:#bdcadc}
+.mt-center{height:calc(100vh - 62px);padding:10px 14px;display:grid;grid-template-rows:62px 70px minmax(0,1fr);gap:9px;overflow:hidden}
+.mt-selector{background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 12px;display:grid;grid-template-columns:minmax(260px,1fr) 190px 110px minmax(220px,.8fr);gap:9px;align-items:end}
+.mt-selector label{font-size:10px;color:var(--muted)}.mt-selector select,.mt-selector input,.mt-selector button{width:100%;height:38px;margin-top:3px;border:1px solid #b9c9da;border-radius:8px;background:#fff;padding:0 9px}.mt-selector button{background:var(--blue);color:#fff;border:0;font-weight:800}.mt-worker-info{height:38px;border-radius:8px;background:#f2f6fb;padding:7px 10px;font-size:12px;color:#53677f;display:flex;align-items:center}
+.mt-summary{display:grid;grid-template-columns:repeat(6,1fr);gap:7px}.mt-summary button{border:1px solid var(--line);border-radius:11px;background:#fff;padding:7px 12px;text-align:left;display:flex;align-items:center;justify-content:space-between}.mt-summary button span{font-size:11px;color:var(--muted)}.mt-summary button b{font-size:21px}.mt-summary button.active{border-color:var(--blue);box-shadow:inset 0 -3px var(--blue)}.mt-summary button:nth-child(2) b,.mt-summary button:nth-child(5) b{color:var(--green)}.mt-summary button:nth-child(3) b,.mt-summary button:nth-child(6) b{color:var(--danger)}.mt-summary button:nth-child(4) b{color:var(--amber)}
+.mt-empty{background:#fff;border:1px dashed #b7c8da;border-radius:13px;display:flex;align-items:center;justify-content:center;flex-direction:column;color:var(--muted);gap:4px}.mt-empty b{font-size:18px;color:#2f455f}
+.mt-tables{min-height:0;display:grid;grid-template-columns:minmax(520px,.85fr) minmax(680px,1.15fr);gap:9px}.mt-panel{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;display:grid;grid-template-rows:50px minmax(0,1fr)}.mt-stores-panel{grid-template-rows:50px minmax(0,1fr) 42px}.mt-panel-head{display:flex;align-items:center;justify-content:space-between;padding:7px 11px;border-bottom:1px solid var(--line)}.mt-panel-head>div:first-child{display:flex;flex-direction:column}.mt-panel-head b{font-size:14px}.mt-panel-head span{font-size:10px;color:var(--muted)}.mt-panel-head input,.mt-panel-head select{height:34px;border:1px solid #bccbdc;border-radius:7px;padding:0 8px}.mt-store-tools{display:flex!important;flex-direction:row!important;gap:6px}.mt-store-tools input{width:230px}.mt-store-tools select{width:145px}
+.mt-table-wrap{overflow:auto;min-height:0}.mt-table{width:100%;border-collapse:separate;border-spacing:0;font-size:11px}.mt-table th{position:sticky;top:0;z-index:2;background:#eff4fa;color:#52667d;text-align:left;padding:8px 7px;border-bottom:1px solid var(--line);white-space:nowrap}.mt-table td{padding:7px;border-bottom:1px solid #e3eaf2;white-space:nowrap}.mt-table tbody tr{cursor:pointer}.mt-table tbody tr:hover{background:#f1f7ff}.mt-table tbody tr.active{background:#e5f2ff;box-shadow:inset 4px 0 var(--blue)}.mt-table tbody tr.row-complete{background:#f2fbf5}.mt-table tbody tr.row-warning{background:#fffaf0}.mt-table tbody tr.row-returned{background:#fff5f5}.mt-num{text-align:right;font-weight:800}.mt-status{display:inline-flex;border-radius:99px;padding:3px 7px;font-size:9px;font-weight:800}.mt-status.ok{background:#e5f7ec;color:#167543}.mt-status.wait{background:#fff0c7;color:#885b00}.mt-status.bad{background:#ffe8e8;color:#b52d2d}.mt-status.info{background:#e7f1ff;color:#1c65b6}.mt-status.muted{background:#eef1f5;color:#64748b}.mt-open-btn{height:27px;border:1px solid #aac7e8;background:#fff;border-radius:6px;color:#1264bf;font-weight:800;padding:0 8px;margin-left:5px}
+.mt-pager{display:flex;align-items:center;justify-content:space-between;padding:5px 10px;border-top:1px solid var(--line)}.mt-pager button{height:30px;border:1px solid #bdccdc;background:#fff;border-radius:7px;padding:0 10px}.mt-pager button:disabled{opacity:.4}.mt-pager span{font-size:11px;color:var(--muted)}
+#reviewMode{height:calc(100vh - 62px)}#reviewMode .rv-workspace{height:calc(100vh - 114px)}
+@media(max-width:1200px){.mt-tables{grid-template-columns:1fr}.mt-days-panel{max-height:42vh}.mt-selector{grid-template-columns:1fr 180px 100px}.mt-worker-info{display:none}.mt-center{overflow:auto;height:auto;min-height:calc(100vh - 62px)}.mt-tables{min-height:900px}.mt-summary{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:760px){.rv-top-title{display:none}.mt-selector{grid-template-columns:1fr 1fr}.mt-selector button{grid-column:1/-1}.mt-summary{grid-template-columns:repeat(2,1fr)}.mt-tables{display:block}.mt-panel{height:480px;margin-bottom:8px}.mt-store-tools input{width:140px}.mt-table{min-width:720px}}
 </style>
 </head>
 <body>
 <header class="rv-top">
-  <div class="rv-brand">
-    <span class="rv-logo">RI</span>
-    <div><strong>RetailInsight</strong><span id="reviewerName">หัวหน้างาน</span></div>
-  </div>
-  <div class="rv-top-tools"><span class="rv-shortcuts">J/K เปลี่ยนงาน · H ย้อนหลัง · F เต็มจอ</span>
-    <nav class="rv-status-tabs" aria-label="สถานะงาน">
-      <button type="button" data-status="PENDING" class="active">รอตรวจ <b id="pendingCount">0</b></button>
-      <button type="button" data-status="APPROVED">อนุมัติ <b id="approvedCount">0</b></button>
-      <button type="button" data-status="RETURNED">ส่งกลับ <b id="returnedCount">0</b></button>
-    </nav>
+  <div class="rv-brand"><span class="rv-logo">RI</span><div><strong>RetailInsight</strong><span id="reviewerName">หัวหน้างาน</span></div></div>
+  <div class="rv-top-title"><b id="pageTitle">ติดตามและตรวจงานรายบุคคล</b><span id="pageSubtitle">เลือกผู้ปฏิบัติงานและเดือนงาน</span></div>
+  <div class="rv-top-tools">
+    <button id="backTrackingBtn" class="hidden" type="button">กลับหน้าติดตาม</button>
     <a class="rv-report-link" href="reviewer-report.html">รายงาน PDF</a>
     <button id="refreshBtn" type="button">อัปเดต</button>
     <button id="logoutBtn" type="button">ออกจากระบบ</button>
   </div>
 </header>
 
-<section class="rv-filterbar">
-  <input id="searchInput" type="search" placeholder="ค้นหาร้าน ผู้ปฏิบัติงาน หรือรหัส">
-  <select id="workerFilter"><option value="">ผู้ปฏิบัติงานทั้งหมด</option></select>
-  <input id="dateFilter" type="date" aria-label="วันที่แผนงาน">
-  <select id="claimFilter" aria-label="ผู้รับตรวจ">
-    <option value="">ผู้รับตรวจทั้งหมด</option>
-    <option value="UNCLAIMED">ยังไม่มีผู้รับตรวจ</option>
-    <option value="MINE">ฉันกำลังตรวจ</option>
-    <option value="OTHERS">ผู้อื่นกำลังตรวจ</option>
-  </select>
-  <button id="clearFiltersBtn" type="button">ล้าง</button>
-  <span id="queueText" class="rv-queue-text">0 รายการ</span>
+<section id="trackingCenter" class="mt-center">
+  <div class="mt-selector">
+    <label>ผู้ปฏิบัติงาน<select id="monthWorkerSelect"><option value="">เลือกผู้ปฏิบัติงาน</option></select></label>
+    <label>เดือนงาน<input id="workMonthInput" type="month"></label>
+    <button id="loadMonthBtn" type="button">แสดงงาน</button>
+    <div id="selectedWorkerInfo" class="mt-worker-info">ยังไม่ได้เลือกผู้ปฏิบัติงาน</div>
+  </div>
+
+  <div id="monthSummary" class="mt-summary hidden">
+    <button type="button" data-month-filter="ALL" class="active"><span>ทั้งหมด</span><b id="sumTotal">0</b></button>
+    <button type="button" data-month-filter="SUBMITTED"><span>ส่งแล้ว</span><b id="sumSubmitted">0</b></button>
+    <button type="button" data-month-filter="NOT_SUBMITTED"><span>ยังไม่ส่ง</span><b id="sumNotSubmitted">0</b></button>
+    <button type="button" data-month-filter="PENDING"><span>รอตรวจ</span><b id="sumPending">0</b></button>
+    <button type="button" data-month-filter="APPROVED"><span>อนุมัติ</span><b id="sumApproved">0</b></button>
+    <button type="button" data-month-filter="RETURNED"><span>ส่งกลับ</span><b id="sumReturned">0</b></button>
+  </div>
+
+  <div id="trackingEmpty" class="mt-empty"><b>เลือกผู้ปฏิบัติงาน</b><span>ระบบจะแสดงงานทั้งหมดของเดือน แยกตามวันที่ปฏิบัติงาน</span></div>
+
+  <div id="trackingTables" class="mt-tables hidden">
+    <section class="mt-panel mt-days-panel">
+      <div class="mt-panel-head"><div><b>สรุปงานรายวัน</b><span id="dayTableCaption"></span></div><input id="daySearchInput" type="search" placeholder="ค้นหาวันที่"></div>
+      <div class="mt-table-wrap"><table class="mt-table"><thead><tr><th>วันที่ปฏิบัติงาน</th><th>ทั้งหมด</th><th>ส่งแล้ว</th><th>ยังไม่ส่ง</th><th>รอตรวจ</th><th>อนุมัติ</th><th>ส่งกลับ</th><th>สถานะ</th></tr></thead><tbody id="daySummaryBody"></tbody></table></div>
+    </section>
+
+    <section class="mt-panel mt-stores-panel">
+      <div class="mt-panel-head">
+        <div><b id="storeTableTitle">รายการร้าน</b><span id="storeTableCaption">เลือกวันที่จากตารางด้านซ้าย</span></div>
+        <div class="mt-store-tools"><input id="storeSearchInput" type="search" placeholder="ค้นหาร้านหรือรหัส"><select id="storeStatusFilter"><option value="ALL">ทุกสถานะ</option><option value="NOT_SUBMITTED">ยังไม่ส่ง</option><option value="PENDING">รอตรวจ</option><option value="UNDER_REVIEW">กำลังตรวจ</option><option value="APPROVED">อนุมัติ</option><option value="RETURNED">ส่งกลับ</option></select></div>
+      </div>
+      <div class="mt-table-wrap"><table class="mt-table mt-store-table"><thead><tr><th>#</th><th>แบรนด์</th><th>รหัสร้าน</th><th>ชื่อร้าน</th><th>POS</th><th>สถานะส่ง</th><th>สถานะตรวจ</th><th>เวลาส่ง</th><th>ผู้ตรวจ</th></tr></thead><tbody id="dayStoresBody"></tbody></table></div>
+      <div class="mt-pager"><button id="storesPrevBtn" type="button">ก่อนหน้า</button><span id="storesPageInfo">1 / 1</span><button id="storesNextBtn" type="button">ถัดไป</button></div>
+    </section>
+  </div>
 </section>
 
-<main class="rv-workspace">
-  <aside class="rv-list-pane">
-    <div class="rv-pane-head"><b>รายการงาน</b><span id="visibleCount">0</span></div>
-    <div id="submissionList" class="rv-list"></div>
-    <div class="rv-pager">
-      <button id="prevPageBtn" type="button">ก่อนหน้า</button>
-      <span id="pageInfo">1 / 1</span>
-      <button id="nextPageBtn" type="button">ถัดไป</button>
-    </div>
-  </aside>
-
-  <section class="rv-image-pane" id="imagePane">
-    <div class="rv-pane-head">
-      <div><b id="imageTitle">รูปหลักฐาน</b><span id="imageMeta">ยังไม่ได้เลือกร้าน</span></div>
-      <div class="rv-image-controls" aria-label="เครื่องมือจัดภาพ">
-        <button id="panLeftBtn" type="button" title="เลื่อนภาพไปทางซ้าย">←</button>
-        <button id="panUpBtn" type="button" title="เลื่อนภาพขึ้น">↑</button>
-        <button id="panDownBtn" type="button" title="เลื่อนภาพลง">↓</button>
-        <button id="panRightBtn" type="button" title="เลื่อนภาพไปทางขวา">→</button>
-        <span class="rv-tool-separator"></span>
-        <button id="zoomOutBtn" type="button" title="ซูมออก">−</button>
-        <button id="zoomResetBtn" type="button" title="คืนค่าภาพ">100%</button>
-        <button id="zoomInBtn" type="button" title="ซูมเข้า">+</button>
-        <span class="rv-tool-separator"></span>
-        <button id="rotateLeftBtn" type="button" title="หมุนซ้าย 90 องศา">↶</button>
-        <button id="rotateRightBtn" type="button" title="หมุนขวา 90 องศา">↷</button>
-        <button id="fullImageBtn" type="button">เต็มจอ</button>
-      </div>
-    </div>
-    <div class="rv-image-tabs">
-      <button type="button" data-image-kind="ALL" class="active">ทั้งหมด</button>
-      <button type="button" data-image-kind="RECEIPT">รูปบิล</button>
-      <button type="button" data-image-kind="STORE">รูปร้าน</button>
-    </div>
-    <div id="galleryStage" class="rv-gallery-stage">
-      <button id="galleryPrevBtn" class="rv-gallery-arrow prev" type="button">‹</button>
-      <div id="galleryEmpty" class="rv-empty compact">เลือกร้านจากรายการ</div>
-      <img id="galleryImage" class="hidden" alt="หลักฐาน" draggable="false">
-      <div class="rv-pan-help">ลากภาพ หรือใช้ลูกศรเพื่อเลื่อน · หมุนล้อเมาส์เพื่อซูม</div>
-      <button id="galleryNextBtn" class="rv-gallery-arrow next" type="button">›</button>
-      <span id="galleryCounter" class="rv-gallery-counter"></span>
-    </div>
-    <div id="galleryThumbs" class="rv-gallery-thumbs"></div>
-    <div id="imageEditTools" class="rv-image-edit-tools hidden">
-      <button type="button" data-upload-category="RECEIPT">เพิ่มรูปบิล</button>
-      <button type="button" data-upload-category="STORE">เพิ่มรูปร้าน</button>
-      <button id="deleteImageBtn" class="danger" type="button">ลบรูปที่เลือก</button>
-    </div>
+<section id="reviewMode" class="hidden">
+  <section class="rv-filterbar">
+    <input id="searchInput" type="search" placeholder="ค้นหาร้าน ผู้ปฏิบัติงาน หรือรหัส">
+    <select id="workerFilter"><option value="">ผู้ปฏิบัติงานทั้งหมด</option></select>
+    <input id="dateFilter" type="date">
+    <select id="claimFilter"><option value="">ผู้รับตรวจทั้งหมด</option><option value="UNCLAIMED">ยังไม่มีผู้รับตรวจ</option><option value="MINE">ฉันกำลังตรวจ</option><option value="OTHERS">ผู้อื่นกำลังตรวจ</option></select>
+    <button id="clearFiltersBtn" type="button">ล้าง</button><span id="queueText" class="rv-queue-text">0 รายการ</span>
   </section>
 
-  <section class="rv-data-pane" id="detailPanel">
-    <div class="rv-empty">เลือกร้านจากรายการ</div>
-  </section>
-</main>
-
+  <main class="rv-workspace">
+    <aside class="rv-list-pane"><div class="rv-pane-head"><b>ร้านในวันที่เลือก</b><span id="visibleCount">0</span></div><div id="submissionList" class="rv-list"></div><div class="rv-pager"><button id="prevPageBtn" type="button">ก่อนหน้า</button><span id="pageInfo">1 / 1</span><button id="nextPageBtn" type="button">ถัดไป</button></div></aside>
+    <section class="rv-image-pane" id="imagePane">
+      <div class="rv-pane-head"><div><b id="imageTitle">รูปหลักฐาน</b><span id="imageMeta">ยังไม่ได้เลือกร้าน</span></div>
+        <div class="rv-image-controls"><button id="panLeftBtn">←</button><button id="panUpBtn">↑</button><button id="panDownBtn">↓</button><button id="panRightBtn">→</button><button id="rotateLeftBtn">↶</button><button id="zoomOutBtn">−</button><button id="zoomResetBtn">100%</button><button id="zoomInBtn">+</button><button id="rotateRightBtn">↷</button><button id="fullImageBtn">เต็มจอ</button></div></div>
+      <div class="rv-image-tabs"><button data-image-kind="ALL" class="active">ทั้งหมด</button><button data-image-kind="RECEIPT">รูปบิล</button><button data-image-kind="STORE">รูปร้าน</button></div>
+      <div id="galleryStage" class="rv-gallery-stage"><button id="galleryPrevBtn" class="rv-gallery-arrow prev">‹</button><div id="galleryEmpty" class="rv-empty compact">เลือกร้านจากรายการ</div><img id="galleryImage" class="hidden" alt="หลักฐาน"><button id="galleryNextBtn" class="rv-gallery-arrow next">›</button><span id="galleryCounter" class="rv-gallery-counter"></span></div>
+      <div id="galleryThumbs" class="rv-gallery-thumbs"></div>
+      <div id="imageEditTools" class="rv-image-edit-tools hidden"><button data-upload-category="RECEIPT">เพิ่มรูปบิล</button><button data-upload-category="STORE">เพิ่มรูปร้าน</button><button id="deleteImageBtn" class="danger">ลบรูปที่เลือก</button></div>
+    </section>
+    <section class="rv-data-pane" id="detailPanel"><div class="rv-empty">เลือกร้านจากรายการ</div></section>
+  </main>
+</section>
 <div id="imageViewer" class="rv-viewer hidden" role="dialog" aria-modal="true">
   <div class="rv-viewer-toolbar">
     <span id="viewerCaption">รูปภาพ</span>
@@ -166,7 +175,7 @@
 <input id="reviewImageInput" type="file" accept="image/*" hidden>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="assets/js/config.js"></script>
-<script src="assets/js/api.js?v=20260731-v2-image"></script>
-<script src="assets/js/reviewer-workspace.js?v=20260731-v2-image"></script>
+<script src="assets/js/api.js?v=20260731-s25-track"></script>
+<script src="assets/js/reviewer-workspace.js?v=20260731-s25-track"></script>
 </body>
 </html>
