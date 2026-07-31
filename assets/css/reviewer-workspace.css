@@ -35,3 +35,15 @@
  .rv-list-pane{grid-template-rows:42px 1fr 38px}
  .rv-info-grid{margin-bottom:4px}.rv-info{padding:5px}.rv-section-title{margin:5px 0 4px}
 }
+
+/* Sprint 24 — image navigation and inspection controls */
+.rv-image-controls{align-items:center;flex-wrap:nowrap;overflow-x:auto;max-width:100%;scrollbar-width:thin}
+.rv-image-controls button{flex:0 0 auto;cursor:pointer;user-select:none}
+.rv-image-controls button:active{transform:translateY(1px);background:#e8f2ff}
+.rv-tool-separator{width:1px;height:24px;background:#d6e1ee;margin:0 2px;flex:0 0 auto}
+.rv-gallery-stage{touch-action:none;cursor:grab}
+.rv-gallery-stage.is-dragging{cursor:grabbing}
+.rv-gallery-stage img{will-change:transform;user-select:none;-webkit-user-drag:none;transition:transform .08s ease}
+.rv-pan-help{position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:3;background:#071224b8;color:#fff;border-radius:8px;padding:4px 8px;font-size:10px;pointer-events:none;opacity:.78;white-space:nowrap}
+.rv-gallery-stage:hover .rv-pan-help{opacity:1}
+@media(max-width:1100px){.rv-pan-help{display:none}.rv-image-controls{max-width:360px}}
