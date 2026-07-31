@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>ตรวจงาน | RetailInsight</title>
-<link id="reviewerCss" rel="stylesheet" href="assets/css/reviewer-workspace.css?v=20260731-v2" onload="document.documentElement.classList.add('rv-css-loaded')">
+<link id="reviewerCss" rel="stylesheet" href="assets/css/reviewer-workspace.css?v=20260731-v2-image" onload="document.documentElement.classList.add('rv-css-loaded')">
 <style id="reviewerCriticalCss">:root{--navy:#0b1830;--blue:#1477e8;--line:#d6e1ee;--bg:#edf3f9;--text:#12223a;--muted:#64748b;--green:#16834b;--amber:#9a6200;--danger:#c73535;--card:#fff}
 *{box-sizing:border-box}html,body{height:100%;overflow:hidden}body{margin:0;background:var(--bg);font-family:"Noto Sans Thai","Leelawadee UI",system-ui,sans-serif;color:var(--text)}button,input,select,textarea{font:inherit}
 .rv-top{height:62px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:8px 16px;gap:16px}.rv-brand{display:flex;align-items:center;gap:10px;min-width:210px}.rv-logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(145deg,#278cff,#0e64c9);display:grid;place-items:center;font-weight:900}.rv-brand div{display:flex;flex-direction:column}.rv-brand strong{font-size:19px}.rv-brand span{font-size:12px;color:#c8d5e8}.rv-top-tools{display:flex;align-items:center;gap:8px}.rv-top-tools>button,.rv-report-link{height:38px;border:1px solid #38506f;background:#142541;color:#fff;border-radius:9px;padding:0 13px;text-decoration:none;font-weight:700;display:grid;place-items:center}.rv-status-tabs{display:flex;height:38px;border:1px solid #38506f;border-radius:10px;overflow:hidden}.rv-status-tabs button{border:0;border-right:1px solid #38506f;background:#10213b;color:#cbd6e6;padding:0 13px}.rv-status-tabs button:last-child{border-right:0}.rv-status-tabs button.active{background:#fff;color:#143158}.rv-status-tabs b{margin-left:6px}
@@ -90,12 +90,18 @@
   <section class="rv-image-pane" id="imagePane">
     <div class="rv-pane-head">
       <div><b id="imageTitle">รูปหลักฐาน</b><span id="imageMeta">ยังไม่ได้เลือกร้าน</span></div>
-      <div class="rv-image-controls">
-        <button id="rotateLeftBtn" type="button" title="หมุนซ้าย">↶</button>
+      <div class="rv-image-controls" aria-label="เครื่องมือจัดภาพ">
+        <button id="panLeftBtn" type="button" title="เลื่อนภาพไปทางซ้าย">←</button>
+        <button id="panUpBtn" type="button" title="เลื่อนภาพขึ้น">↑</button>
+        <button id="panDownBtn" type="button" title="เลื่อนภาพลง">↓</button>
+        <button id="panRightBtn" type="button" title="เลื่อนภาพไปทางขวา">→</button>
+        <span class="rv-tool-separator"></span>
         <button id="zoomOutBtn" type="button" title="ซูมออก">−</button>
-        <button id="zoomResetBtn" type="button">100%</button>
+        <button id="zoomResetBtn" type="button" title="คืนค่าภาพ">100%</button>
         <button id="zoomInBtn" type="button" title="ซูมเข้า">+</button>
-        <button id="rotateRightBtn" type="button" title="หมุนขวา">↷</button>
+        <span class="rv-tool-separator"></span>
+        <button id="rotateLeftBtn" type="button" title="หมุนซ้าย 90 องศา">↶</button>
+        <button id="rotateRightBtn" type="button" title="หมุนขวา 90 องศา">↷</button>
         <button id="fullImageBtn" type="button">เต็มจอ</button>
       </div>
     </div>
@@ -107,7 +113,8 @@
     <div id="galleryStage" class="rv-gallery-stage">
       <button id="galleryPrevBtn" class="rv-gallery-arrow prev" type="button">‹</button>
       <div id="galleryEmpty" class="rv-empty compact">เลือกร้านจากรายการ</div>
-      <img id="galleryImage" class="hidden" alt="หลักฐาน">
+      <img id="galleryImage" class="hidden" alt="หลักฐาน" draggable="false">
+      <div class="rv-pan-help">ลากภาพ หรือใช้ลูกศรเพื่อเลื่อน · หมุนล้อเมาส์เพื่อซูม</div>
       <button id="galleryNextBtn" class="rv-gallery-arrow next" type="button">›</button>
       <span id="galleryCounter" class="rv-gallery-counter"></span>
     </div>
@@ -159,7 +166,7 @@
 <input id="reviewImageInput" type="file" accept="image/*" hidden>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="assets/js/config.js"></script>
-<script src="assets/js/api.js?v=20260731-v2"></script>
-<script src="assets/js/reviewer-workspace.js?v=20260731-v2"></script>
+<script src="assets/js/api.js?v=20260731-v2-image"></script>
+<script src="assets/js/reviewer-workspace.js?v=20260731-v2-image"></script>
 </body>
 </html>
