@@ -1,0 +1,16 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>รายงาน PDF | RetailInsight</title><link rel="stylesheet" href="assets/css/reviewer-report.css?v=20260730-s22"></head><body>
+<header class="rp-top"><div><b>RetailInsight</b><span>รายงานผลการปฏิบัติงาน</span></div><a href="reviewer.html">กลับหน้าตรวจงาน</a></header>
+<main class="rp-main">
+<section class="rp-controls">
+<label>วันที่เริ่ม<input id="fromDate" type="date"></label><label>วันที่สิ้นสุด<input id="toDate" type="date"></label>
+<label>สถานะ<select id="reportStatus"><option value="APPROVED">อนุมัติแล้ว</option><option value="ALL">ทั้งหมด</option><option value="RETURNED">ส่งกลับ</option></select></label>
+<label>ผู้อนุมัติรายงาน<input id="approverName" placeholder="ชื่อผู้อนุมัติ"></label>
+<label>ภาพในรายงาน<select id="imageMode"><option value="PRIMARY">รูปหลัก 1 รูปต่อร้าน</option><option value="NONE">ไม่แสดงรูป</option></select></label>
+<button id="previewBtn">ตรวจจำนวน</button><button id="exportBtn" class="primary">สร้าง PDF</button>
+</section>
+<section class="rp-status"><b id="reportSummary">เลือกช่วงวันที่</b><progress id="reportProgress" value="0" max="100"></progress><span id="reportMessage"></span></section>
+<section class="rp-note">A4 แนวนอน 6 ร้านต่อหน้า ระบบแบ่งไฟล์ทุก 120 ร้านเพื่อลดการใช้หน่วยความจำ</section>
+</main>
+<div id="pdfStage" class="rp-pdf-stage"></div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script><script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="assets/js/config.js"></script><script src="assets/js/api.js?v=20260730-s22"></script><script src="assets/js/reviewer-report.js?v=20260730-s22"></script></body></html>
